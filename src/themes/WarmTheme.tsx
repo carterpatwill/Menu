@@ -76,8 +76,8 @@ function FeaturedEditorial({
       className={`w-full text-left flex ${isReversed ? "flex-row-reverse" : "flex-row"} gap-0 overflow-hidden rounded-2xl`}
       style={{ background: "#e8ddd0" }}
     >
-      <div className="w-2/5 overflow-hidden flex-shrink-0">
-        <img src={item.imageUrl} alt={item.name} className="w-full h-full object-cover" />
+      <div className="w-2/5 overflow-hidden flex-shrink-0 bg-[#d4c5b0]">
+        {item.imageUrl && <img src={item.imageUrl} alt={item.name} className="w-full h-full object-cover" />}
       </div>
       <div className="flex-1 p-5 flex flex-col justify-between">
         <div>
@@ -112,8 +112,8 @@ function ItemCard({ item, onClick }: { item: MenuItem; onClick: () => void }) {
       className="w-full text-left rounded-xl overflow-hidden shadow-sm"
       style={{ background: "#f5ede2" }}
     >
-      <div className="h-36 overflow-hidden">
-        <img src={item.imageUrl} alt={item.name} className="w-full h-full object-cover" />
+      <div className="h-36 overflow-hidden bg-[#e0d0bc]">
+        {item.imageUrl && <img src={item.imageUrl} alt={item.name} className="w-full h-full object-cover" />}
       </div>
       <div className="p-4">
         <div className="flex items-start justify-between gap-2">

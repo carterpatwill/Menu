@@ -18,18 +18,46 @@ export default async function AdminMenuPage() {
 
   if (!restaurant) {
     return (
-      <main style={{ padding: "2rem" }}>
-        <p>No restaurant found for your account.</p>
+      <main
+        style={{
+          minHeight: "100vh",
+          backgroundColor: "#fff9f3",
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "center",
+        }}
+      >
+        <p
+          style={{
+            color: "#9ca3af",
+            fontFamily: "Georgia, 'Times New Roman', serif",
+            fontSize: "1.125rem",
+            fontStyle: "italic",
+          }}
+        >
+          No restaurant found for your account.
+        </p>
       </main>
     );
   }
 
   const items = await listItems(restaurant.id, supabase);
 
+  const { data: firstTag } = await supabase
+    .from("nfc_tags")
+    .select("id")
+    .eq("restaurant_id", restaurant.id)
+    .limit(1)
+    .single();
+
   return (
-    <main style={{ padding: "2rem" }}>
-      <h1>{restaurant.name} — Menu Items</h1>
-      <MenuManager restaurantId={restaurant.id} initialItems={items} initialRestaurant={restaurant} />
+    <main>
+      <MenuManager
+        restaurantId={restaurant.id}
+        initialItems={items}
+        initialRestaurant={restaurant}
+        previewTagId={firstTag?.id ?? null}
+      />
     </main>
   );
 }

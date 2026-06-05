@@ -8,7 +8,7 @@ export interface MenuItem {
   description: string;
   price: number;
   category: Category;
-  imageUrl: string;
+  imageUrl: string | undefined;
   isFeatured: boolean;
   isAvailable: boolean;
 }

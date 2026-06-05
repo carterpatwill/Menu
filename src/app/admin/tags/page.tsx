@@ -26,14 +26,5 @@ export default async function AdminTagsPage() {
 
   const tags = await listTags(restaurant.id, supabase);
 
-  return (
-    <main style={{ padding: "2rem" }}>
-      <h1>{restaurant.name} — NFC Tags</h1>
-      <p style={{ color: "#555" }}>
-        Each tag below is permanently linked to your restaurant. Program the URL
-        shown onto the physical NFC tag.
-      </p>
-      <TagsManager initialTags={tags} />
-    </main>
-  );
+  return <TagsManager initialTags={tags} restaurantName={restaurant.name} />;
 }

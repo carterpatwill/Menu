@@ -46,7 +46,7 @@ function ItemModal({ item, onClose }: { item: MenuItem; onClose: () => void }) {
 function FeaturedHero({ item, onClick }: { item: MenuItem; onClick: () => void }) {
   return (
     <button onClick={onClick} className="w-full text-left relative overflow-hidden rounded-2xl h-72">
-      <img src={item.imageUrl} alt={item.name} className="w-full h-full object-cover" />
+      {item.imageUrl && <img src={item.imageUrl} alt={item.name} className="w-full h-full object-cover" />}
       <div className="absolute inset-0 bg-gradient-to-t from-black via-black/40 to-transparent" />
       <div className="absolute top-3 left-3">
         <span className="bg-amber-400 text-black text-[10px] font-bold uppercase tracking-wider px-2 py-1 rounded-full">
@@ -70,8 +70,8 @@ function ItemCard({ item, onClick }: { item: MenuItem; onClick: () => void }) {
       onClick={onClick}
       className="w-full text-left bg-white/5 rounded-xl overflow-hidden flex gap-3 border border-white/10 hover:border-white/20 transition-colors"
     >
-      <div className="w-24 h-24 flex-shrink-0 overflow-hidden">
-        <img src={item.imageUrl} alt={item.name} className="w-full h-full object-cover" />
+      <div className="w-24 h-24 flex-shrink-0 overflow-hidden bg-white/5">
+        {item.imageUrl && <img src={item.imageUrl} alt={item.name} className="w-full h-full object-cover" />}
       </div>
       <div className="py-3 pr-3 flex-1 min-w-0 flex flex-col justify-between">
         <div>

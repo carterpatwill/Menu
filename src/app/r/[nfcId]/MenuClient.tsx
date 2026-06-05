@@ -12,16 +12,19 @@ interface Props {
   tagLabel?: string;
   restaurantId: string;
   nfcTagId: string;
+  isPreview?: boolean;
 }
 
-export function MenuClient({ restaurant, tagLabel, restaurantId, nfcTagId }: Props) {
+export function MenuClient({ restaurant, tagLabel, restaurantId, nfcTagId, isPreview }: Props) {
   const tracker = useMemo(() => {
     const supabase = createClient();
     return createAnalyticsTracker(supabase);
   }, []);
 
   function handleItemTap(item: MenuItem) {
-    tracker.trackItemTap({ restaurantId, nfcTagId, menuItemId: item.id });
+    if (!isPreview) {
+      tracker.trackItemTap({ restaurantId, nfcTagId, menuItemId: item.id });
+    }
   }
 
   async function handleSubmitReview({ rating, body }: { rating: number; body: string }) {

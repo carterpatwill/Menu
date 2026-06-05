@@ -41,7 +41,7 @@ function toMenuItem(row: DbMenuItem): MenuItem {
     description: row.description,
     price: row.price,
     category: row.category as Category,
-    imageUrl: row.image_url ?? "",
+    imageUrl: row.image_url ?? undefined,
     isFeatured: row.is_featured,
     isAvailable: row.is_available,
   };
