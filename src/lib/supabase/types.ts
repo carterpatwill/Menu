@@ -38,6 +38,7 @@ export type Database = {
           has_drinks?: boolean;
           has_desserts?: boolean;
         };
+        Relationships: [];
       };
       menu_items: {
         Row: {
@@ -76,6 +77,7 @@ export type Database = {
           is_available?: boolean;
           sort_order?: number;
         };
+        Relationships: [];
       };
       nfc_tags: {
         Row: {
@@ -96,6 +98,7 @@ export type Database = {
           label?: string;
           created_at?: string;
         };
+        Relationships: [];
       };
       click_events: {
         Row: {
@@ -122,6 +125,7 @@ export type Database = {
           menu_item_id?: string | null;
           created_at?: string;
         };
+        Relationships: [];
       };
       reviews: {
         Row: {
@@ -148,7 +152,14 @@ export type Database = {
           rating?: number;
           created_at?: string;
         };
+        Relationships: [];
       };
+    };
+    Views: {
+      [_ in never]: never;
+    };
+    Functions: {
+      [_ in never]: never;
     };
     Enums: {
       category:
