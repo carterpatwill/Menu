@@ -8,6 +8,7 @@ export async function proxy(request: NextRequest) {
   // Pass through the login page and auth callback — no session needed
   if (
     pathname === "/admin/login" ||
+    pathname.startsWith("/admin/login/") ||
     pathname.startsWith("/admin/auth/")
   ) {
     return NextResponse.next({ request });
