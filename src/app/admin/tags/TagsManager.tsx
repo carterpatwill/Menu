@@ -255,7 +255,10 @@ export function TagsManager({ initialTags, restaurantName }: Props) {
                           {tag.label}
                         </p>
                       )}
-                      <p
+                      <a
+                        href={urlFor(tag.id)}
+                        target="_blank"
+                        rel="noopener noreferrer"
                         style={{
                           fontSize: "0.6875rem",
                           color: "#a8a09a",
@@ -264,10 +267,12 @@ export function TagsManager({ initialTags, restaurantName }: Props) {
                           whiteSpace: "nowrap",
                           overflow: "hidden",
                           textOverflow: "ellipsis",
+                          display: "block",
+                          textDecoration: "none",
                         }}
                       >
                         {urlFor(tag.id)}
-                      </p>
+                      </a>
                     </div>
 
                     {/* Created date — desktop only */}
@@ -338,8 +343,29 @@ export function TagsManager({ initialTags, restaurantName }: Props) {
                               letterSpacing: "0.02em",
                             }}
                           >
-                            {isCopied ? "Copied!" : "Copy URL"}
+                            {isCopied ? "Copied!" : "Copy"}
                           </button>
+                          <a
+                            href={urlFor(tag.id)}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            style={{
+                              padding: "0.3rem 0.875rem",
+                              borderRadius: "9999px",
+                              border: "none",
+                              background: "#f3f4f6",
+                              color: "#374151",
+                              fontSize: "0.75rem",
+                              fontWeight: 700,
+                              cursor: "pointer",
+                              letterSpacing: "0.02em",
+                              textDecoration: "none",
+                              display: "inline-flex",
+                              alignItems: "center",
+                            }}
+                          >
+                            Open ↗
+                          </a>
                           <button
                             onClick={() => startEdit(tag)}
                             style={{
