@@ -2,7 +2,6 @@
 
 import { createClient } from "@/lib/supabase/server";
 import { submitReview, type SubmitReviewResult } from "@/lib/review-service";
-import { createReviewNotifier } from "@/lib/review-notifier";
 
 export async function submitReviewAction(input: {
   restaurantId: string;
@@ -11,6 +10,5 @@ export async function submitReviewAction(input: {
   body: string;
 }): Promise<SubmitReviewResult> {
   const supabase = await createClient();
-  const notifier = createReviewNotifier();
-  return submitReview(input, supabase, notifier);
+  return submitReview(input, supabase);
 }

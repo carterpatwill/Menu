@@ -32,23 +32,13 @@ export interface ReviewInput {
   body: string;
 }
 
-export interface ReviewNotifier {
-  notifyOwnerOfReview(args: {
-    restaurantId: string;
-    nfcTagId: string;
-    rating: number;
-    body: string;
-  }): Promise<void>;
-}
-
 export type SubmitReviewResult =
   | { ok: true }
   | { ok: false; error: string };
 
 export async function submitReview(
   input: ReviewInput,
-  supabase: SupabaseClient<Database>,
-  notifier: ReviewNotifier
+  supabase: SupabaseClient<Database>
 ): Promise<SubmitReviewResult> {
   const body = input.body?.trim() ?? "";
   if (!body) return { ok: false, error: "Review body is required" };
@@ -64,11 +54,5 @@ export async function submitReview(
   });
   if (error) return { ok: false, error: "Failed to submit review" };
 
-  await notifier.notifyOwnerOfReview({
-    restaurantId: input.restaurantId,
-    nfcTagId: input.nfcTagId,
-    rating: input.rating,
-    body,
-  });
   return { ok: true };
 }

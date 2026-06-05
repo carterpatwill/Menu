@@ -157,7 +157,6 @@ export function BoldTheme({
           {review.submitted ? (
             <>
               <h3 className="font-black text-white text-lg mb-1">Thanks for the feedback</h3>
-              <p className="text-white/40 text-xs">The owner has been notified.</p>
             </>
           ) : (
             <>

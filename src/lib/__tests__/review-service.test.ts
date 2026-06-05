@@ -21,16 +21,9 @@ function makeSupabase(returnVal: unknown) {
   return { from, chain };
 }
 
-function makeNotifier() {
-  return {
-    notifyOwnerOfReview: vi.fn().mockResolvedValue(undefined),
-  };
-}
-
 describe("submitReview", () => {
-  it("inserts the review row and triggers the owner notification on valid input", async () => {
+  it("inserts the review row on valid input", async () => {
     const { from, chain } = makeSupabase({ data: null, error: null });
-    const notifier = makeNotifier();
 
     const result = await submitReview(
       {
@@ -40,8 +33,7 @@ describe("submitReview", () => {
         body: "Great food",
       },
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      { from } as any,
-      notifier
+      { from } as any
     );
 
     expect(result).toEqual({ ok: true });
@@ -52,17 +44,10 @@ describe("submitReview", () => {
       body: "Great food",
       rating: 5,
     });
-    expect(notifier.notifyOwnerOfReview).toHaveBeenCalledWith({
-      restaurantId: "rest-1",
-      nfcTagId: "tag-1",
-      rating: 5,
-      body: "Great food",
-    });
   });
 
-  it("returns a validation error and skips insert + notify when body is empty", async () => {
+  it("returns a validation error and skips insert when body is empty", async () => {
     const { from, chain } = makeSupabase({ data: null, error: null });
-    const notifier = makeNotifier();
 
     const result = await submitReview(
       {
@@ -72,21 +57,18 @@ describe("submitReview", () => {
         body: "   ",
       },
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      { from } as any,
-      notifier
+      { from } as any
     );
 
     expect(result.ok).toBe(false);
     if (!result.ok) expect(result.error).toMatch(/body/i);
     expect(chain.insert).not.toHaveBeenCalled();
-    expect(notifier.notifyOwnerOfReview).not.toHaveBeenCalled();
   });
 
   it.each([0, 6, 3.5, NaN])(
-    "rejects rating %s without inserting or notifying",
+    "rejects rating %s without inserting",
     async (rating) => {
       const { from, chain } = makeSupabase({ data: null, error: null });
-      const notifier = makeNotifier();
 
       const result = await submitReview(
         {
@@ -96,20 +78,17 @@ describe("submitReview", () => {
           body: "Decent",
         },
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        { from } as any,
-        notifier
+        { from } as any
       );
 
       expect(result.ok).toBe(false);
       if (!result.ok) expect(result.error).toMatch(/rating/i);
       expect(chain.insert).not.toHaveBeenCalled();
-      expect(notifier.notifyOwnerOfReview).not.toHaveBeenCalled();
     }
   );
 
-  it("returns an error and skips notification when the insert fails", async () => {
+  it("returns an error when the insert fails", async () => {
     const { from, chain } = makeSupabase({ data: null, error: { message: "rls" } });
-    const notifier = makeNotifier();
 
     const result = await submitReview(
       {
@@ -119,13 +98,11 @@ describe("submitReview", () => {
         body: "Tasty",
       },
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      { from } as any,
-      notifier
+      { from } as any
     );
 
     expect(result.ok).toBe(false);
     expect(chain.insert).toHaveBeenCalled();
-    expect(notifier.notifyOwnerOfReview).not.toHaveBeenCalled();
   });
 });
 
