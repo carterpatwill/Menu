@@ -2,7 +2,7 @@ import { notFound } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import { resolveTag } from "@/lib/nfc-resolver";
 import { toThemeRestaurant } from "@/lib/menu-renderer";
-import { MenuTheme } from "@/themes";
+import { MenuClient } from "./MenuClient";
 
 export default async function MenuPage({
   params,
@@ -25,5 +25,12 @@ export default async function MenuPage({
 
   const themeRestaurant = toThemeRestaurant(restaurant, items);
 
-  return <MenuTheme restaurant={themeRestaurant} tagLabel={tag.label} />;
+  return (
+    <MenuClient
+      restaurant={themeRestaurant}
+      tagLabel={tag.label ?? undefined}
+      restaurantId={restaurant.id}
+      nfcTagId={tag.id}
+    />
+  );
 }
