@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { Restaurant, MenuItem, CATEGORY_LABELS, Category } from "./types";
+import { useReviewForm, type ReviewSubmitInput, type ReviewSubmitResult } from "./useReviewForm";
 
 function ItemModal({ item, onClose }: { item: MenuItem; onClose: () => void }) {
   return (
@@ -138,12 +139,15 @@ export function WarmTheme({
   restaurant,
   tagLabel,
   onItemTap,
+  onSubmitReview,
 }: {
   restaurant: Restaurant;
   tagLabel?: string;
   onItemTap?: (item: MenuItem) => void;
+  onSubmitReview?: (input: ReviewSubmitInput) => Promise<ReviewSubmitResult>;
 }) {
   const [selectedItem, setSelectedItem] = useState<MenuItem | null>(null);
+  const review = useReviewForm(onSubmitReview);
 
   function handleItemClick(item: MenuItem) {
     setSelectedItem(item);
@@ -226,38 +230,75 @@ export function WarmTheme({
 
       <div className="px-5 mt-12">
         <div className="rounded-2xl p-6 text-center" style={{ background: "#e8ddd0" }}>
-          <h3
-            className="font-bold text-xl mb-1"
-            style={{ color: "#2c1a0e", fontFamily: "Georgia, serif" }}
-          >
-            Share your experience
-          </h3>
-          <p className="text-xs mb-6" style={{ color: "#8b6c52" }}>
-            We read every review
-          </p>
-          <div className="flex justify-center gap-3 mb-5">
-            {[1, 2, 3, 4, 5].map((n) => (
-              <button
-                key={n}
-                className="w-10 h-10 rounded-full border text-sm font-semibold transition-colors"
-                style={{ borderColor: "#b89870", color: "#8b6c52" }}
+          {review.submitted ? (
+            <>
+              <h3
+                className="font-bold text-xl mb-2"
+                style={{ color: "#2c1a0e", fontFamily: "Georgia, serif" }}
               >
-                {n}
+                Thank you
+              </h3>
+              <p className="text-sm" style={{ color: "#6b4f3a" }}>
+                Your review has been sent to the kitchen.
+              </p>
+            </>
+          ) : (
+            <>
+              <h3
+                className="font-bold text-xl mb-1"
+                style={{ color: "#2c1a0e", fontFamily: "Georgia, serif" }}
+              >
+                Share your experience
+              </h3>
+              <p className="text-xs mb-6" style={{ color: "#8b6c52" }}>
+                We read every review
+              </p>
+              <div className="flex justify-center gap-3 mb-5">
+                {[1, 2, 3, 4, 5].map((n) => {
+                  const active = review.rating >= n;
+                  return (
+                    <button
+                      key={n}
+                      type="button"
+                      onClick={() => review.setRating(n)}
+                      aria-label={`${n} star${n > 1 ? "s" : ""}`}
+                      aria-pressed={active}
+                      className="w-10 h-10 rounded-full border text-sm font-semibold transition-colors"
+                      style={{
+                        borderColor: "#b89870",
+                        background: active ? "#5c3d1e" : "transparent",
+                        color: active ? "#fdf6ec" : "#8b6c52",
+                      }}
+                    >
+                      {n}
+                    </button>
+                  );
+                })}
+              </div>
+              <textarea
+                placeholder="What was memorable about your visit?"
+                rows={3}
+                value={review.body}
+                onChange={(e) => review.setBody(e.target.value)}
+                className="w-full text-sm placeholder-opacity-50 rounded-xl p-4 resize-none focus:outline-none border"
+                style={{ background: "#fdf6ec", borderColor: "#c4a882", color: "#2c1a0e" }}
+              />
+              {review.error && (
+                <p className="mt-3 text-xs" style={{ color: "#a13c1e" }}>
+                  {review.error}
+                </p>
+              )}
+              <button
+                type="button"
+                onClick={review.submit}
+                disabled={review.submitting}
+                className="mt-4 w-full py-3 rounded-xl text-sm font-semibold transition-colors disabled:opacity-60"
+                style={{ background: "#5c3d1e", color: "#fdf6ec" }}
+              >
+                {review.submitting ? "Sending…" : "Send review"}
               </button>
-            ))}
-          </div>
-          <textarea
-            placeholder="What was memorable about your visit?"
-            rows={3}
-            className="w-full text-sm placeholder-opacity-50 rounded-xl p-4 resize-none focus:outline-none border"
-            style={{ background: "#fdf6ec", borderColor: "#c4a882", color: "#2c1a0e" }}
-          />
-          <button
-            className="mt-4 w-full py-3 rounded-xl text-sm font-semibold transition-colors"
-            style={{ background: "#5c3d1e", color: "#fdf6ec" }}
-          >
-            Send review
-          </button>
+            </>
+          )}
         </div>
       </div>
 

@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { Restaurant, MenuItem, CATEGORY_LABELS, Category } from "./types";
+import { useReviewForm, type ReviewSubmitInput, type ReviewSubmitResult } from "./useReviewForm";
 
 function ItemModal({ item, onClose }: { item: MenuItem; onClose: () => void }) {
   return (
@@ -84,12 +85,15 @@ export function MinimalTheme({
   restaurant,
   tagLabel,
   onItemTap,
+  onSubmitReview,
 }: {
   restaurant: Restaurant;
   tagLabel?: string;
   onItemTap?: (item: MenuItem) => void;
+  onSubmitReview?: (input: ReviewSubmitInput) => Promise<ReviewSubmitResult>;
 }) {
   const [selectedItem, setSelectedItem] = useState<MenuItem | null>(null);
+  const review = useReviewForm(onSubmitReview);
 
   function handleItemClick(item: MenuItem) {
     setSelectedItem(item);
@@ -141,23 +145,52 @@ export function MinimalTheme({
 
       <div className="px-5 mt-12">
         <div className="border border-gray-100 rounded-2xl p-5">
-          <h3 className="font-semibold text-gray-900 text-base mb-1">Leave a review</h3>
-          <p className="text-gray-400 text-xs mb-4">How was your experience today?</p>
-          <div className="flex gap-2 mb-4">
-            {[1, 2, 3, 4, 5].map((n) => (
-              <button key={n} className="w-10 h-10 rounded-full border border-gray-200 text-gray-400 text-sm hover:border-gray-900 hover:text-gray-900 transition-colors">
-                {n}
+          {review.submitted ? (
+            <>
+              <h3 className="font-semibold text-gray-900 text-base mb-1">Thank you</h3>
+              <p className="text-gray-500 text-xs">We&apos;ve passed your feedback along.</p>
+            </>
+          ) : (
+            <>
+              <h3 className="font-semibold text-gray-900 text-base mb-1">Leave a review</h3>
+              <p className="text-gray-400 text-xs mb-4">How was your experience today?</p>
+              <div className="flex gap-2 mb-4">
+                {[1, 2, 3, 4, 5].map((n) => {
+                  const active = review.rating >= n;
+                  return (
+                    <button
+                      key={n}
+                      type="button"
+                      onClick={() => review.setRating(n)}
+                      aria-label={`${n} star${n > 1 ? "s" : ""}`}
+                      aria-pressed={active}
+                      className={`w-10 h-10 rounded-full border text-sm transition-colors ${active ? "border-gray-900 bg-gray-900 text-white" : "border-gray-200 text-gray-400 hover:border-gray-900 hover:text-gray-900"}`}
+                    >
+                      {n}
+                    </button>
+                  );
+                })}
+              </div>
+              <textarea
+                placeholder="Tell us what you thought..."
+                rows={3}
+                value={review.body}
+                onChange={(e) => review.setBody(e.target.value)}
+                className="w-full text-sm text-gray-700 placeholder-gray-300 border border-gray-200 rounded-xl p-3 resize-none focus:outline-none focus:border-gray-400 transition-colors"
+              />
+              {review.error && (
+                <p className="mt-2 text-xs text-red-600">{review.error}</p>
+              )}
+              <button
+                type="button"
+                onClick={review.submit}
+                disabled={review.submitting}
+                className="mt-3 w-full bg-gray-900 text-white text-sm font-medium py-3 rounded-xl hover:bg-gray-700 transition-colors disabled:opacity-60"
+              >
+                {review.submitting ? "Submitting…" : "Submit review"}
               </button>
-            ))}
-          </div>
-          <textarea
-            placeholder="Tell us what you thought..."
-            rows={3}
-            className="w-full text-sm text-gray-700 placeholder-gray-300 border border-gray-200 rounded-xl p-3 resize-none focus:outline-none focus:border-gray-400 transition-colors"
-          />
-          <button className="mt-3 w-full bg-gray-900 text-white text-sm font-medium py-3 rounded-xl hover:bg-gray-700 transition-colors">
-            Submit review
-          </button>
+            </>
+          )}
         </div>
       </div>
 

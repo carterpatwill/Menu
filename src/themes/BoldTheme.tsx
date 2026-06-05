@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { Restaurant, MenuItem, CATEGORY_LABELS, Category } from "./types";
+import { useReviewForm, type ReviewSubmitInput, type ReviewSubmitResult } from "./useReviewForm";
 
 function ItemModal({ item, onClose }: { item: MenuItem; onClose: () => void }) {
   return (
@@ -87,12 +88,15 @@ export function BoldTheme({
   restaurant,
   tagLabel,
   onItemTap,
+  onSubmitReview,
 }: {
   restaurant: Restaurant;
   tagLabel?: string;
   onItemTap?: (item: MenuItem) => void;
+  onSubmitReview?: (input: ReviewSubmitInput) => Promise<ReviewSubmitResult>;
 }) {
   const [selectedItem, setSelectedItem] = useState<MenuItem | null>(null);
+  const review = useReviewForm(onSubmitReview);
 
   function handleItemClick(item: MenuItem) {
     setSelectedItem(item);
@@ -150,26 +154,52 @@ export function BoldTheme({
 
       <div className="px-5 mt-4">
         <div className="border border-white/10 rounded-2xl p-5 bg-white/5">
-          <h3 className="font-black text-white text-lg mb-1">Rate your visit</h3>
-          <p className="text-white/30 text-xs mb-5">Your feedback helps us improve.</p>
-          <div className="flex gap-2 mb-5">
-            {[1, 2, 3, 4, 5].map((n) => (
+          {review.submitted ? (
+            <>
+              <h3 className="font-black text-white text-lg mb-1">Thanks for the feedback</h3>
+              <p className="text-white/40 text-xs">The owner has been notified.</p>
+            </>
+          ) : (
+            <>
+              <h3 className="font-black text-white text-lg mb-1">Rate your visit</h3>
+              <p className="text-white/30 text-xs mb-5">Your feedback helps us improve.</p>
+              <div className="flex gap-2 mb-5">
+                {[1, 2, 3, 4, 5].map((n) => {
+                  const active = review.rating >= n;
+                  return (
+                    <button
+                      key={n}
+                      type="button"
+                      onClick={() => review.setRating(n)}
+                      aria-label={`${n} star${n > 1 ? "s" : ""}`}
+                      aria-pressed={active}
+                      className={`flex-1 aspect-square rounded-xl border font-bold text-sm transition-colors ${active ? "border-amber-400 bg-amber-400 text-black" : "border-white/10 text-white/40 hover:border-amber-400 hover:text-amber-400"}`}
+                    >
+                      {n}
+                    </button>
+                  );
+                })}
+              </div>
+              <textarea
+                placeholder="What stood out?"
+                rows={3}
+                value={review.body}
+                onChange={(e) => review.setBody(e.target.value)}
+                className="w-full text-sm text-white placeholder-white/20 bg-white/5 border border-white/10 rounded-xl p-3 resize-none focus:outline-none focus:border-amber-400/50 transition-colors"
+              />
+              {review.error && (
+                <p className="mt-2 text-xs text-amber-300">{review.error}</p>
+              )}
               <button
-                key={n}
-                className="flex-1 aspect-square rounded-xl border border-white/10 text-white/40 font-bold text-sm hover:border-amber-400 hover:text-amber-400 transition-colors"
+                type="button"
+                onClick={review.submit}
+                disabled={review.submitting}
+                className="mt-3 w-full bg-amber-400 text-black text-sm font-black py-3 rounded-xl hover:bg-amber-300 transition-colors uppercase tracking-wider disabled:opacity-60"
               >
-                {n}
+                {review.submitting ? "Sending…" : "Submit"}
               </button>
-            ))}
-          </div>
-          <textarea
-            placeholder="What stood out?"
-            rows={3}
-            className="w-full text-sm text-white placeholder-white/20 bg-white/5 border border-white/10 rounded-xl p-3 resize-none focus:outline-none focus:border-amber-400/50 transition-colors"
-          />
-          <button className="mt-3 w-full bg-amber-400 text-black text-sm font-black py-3 rounded-xl hover:bg-amber-300 transition-colors uppercase tracking-wider">
-            Submit
-          </button>
+            </>
+          )}
         </div>
       </div>
 
