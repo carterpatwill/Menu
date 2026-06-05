@@ -9,7 +9,9 @@ import {
   updateItem,
   deleteItem,
   toggleAvailable,
+  toggleFeatured,
 } from "@/lib/menu-item-service";
+import { toggleCategory } from "@/lib/restaurant-service";
 import { validateAndUpload } from "@/lib/image-upload";
 import type { Database } from "@/lib/supabase/types";
 
@@ -31,6 +33,20 @@ export async function toggleAvailableAction(id: string, current: boolean) {
   const supabase = await createClient();
   await getRestaurantId(supabase);
   await toggleAvailable(id, current, supabase);
+  revalidatePath("/admin/menu");
+}
+
+export async function toggleFeaturedAction(id: string, current: boolean) {
+  const supabase = await createClient();
+  await getRestaurantId(supabase);
+  await toggleFeatured(id, current, supabase);
+  revalidatePath("/admin/menu");
+}
+
+export async function toggleCategoryAction(category: Category, enabled: boolean) {
+  const supabase = await createClient();
+  const restaurantId = await getRestaurantId(supabase);
+  await toggleCategory(restaurantId, category, enabled, supabase);
   revalidatePath("/admin/menu");
 }
 

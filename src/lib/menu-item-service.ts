@@ -54,3 +54,14 @@ export async function toggleAvailable(
     .update({ is_available: !current })
     .eq("id", id);
 }
+
+export async function toggleFeatured(
+  id: string,
+  current: boolean,
+  supabase: Supabase
+): Promise<void> {
+  await supabase
+    .from("menu_items")
+    .update({ is_featured: !current })
+    .eq("id", id);
+}

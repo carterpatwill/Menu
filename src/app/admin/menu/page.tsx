@@ -12,7 +12,7 @@ export default async function AdminMenuPage() {
 
   const { data: restaurant } = await supabase
     .from("restaurants")
-    .select("id, name")
+    .select("*")
     .eq("owner_id", user.id)
     .single();
 
@@ -29,7 +29,7 @@ export default async function AdminMenuPage() {
   return (
     <main style={{ padding: "2rem" }}>
       <h1>{restaurant.name} — Menu Items</h1>
-      <MenuManager restaurantId={restaurant.id} initialItems={items} />
+      <MenuManager restaurantId={restaurant.id} initialItems={items} initialRestaurant={restaurant} />
     </main>
   );
 }

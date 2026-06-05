@@ -5,6 +5,7 @@ import {
   updateItem,
   deleteItem,
   toggleAvailable,
+  toggleFeatured,
 } from "../menu-item-service";
 import type { Database } from "../supabase/types";
 
@@ -127,5 +128,23 @@ describe("toggleAvailable", () => {
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     await toggleAvailable("item-1", false, { from } as any);
     expect(chain.update).toHaveBeenCalledWith({ is_available: true });
+  });
+});
+
+describe("toggleFeatured", () => {
+  it("sets is_featured to true when current is false", async () => {
+    const { from, chain } = makeSupabase({ data: null, error: null });
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    await toggleFeatured("item-1", false, { from } as any);
+    expect(from).toHaveBeenCalledWith("menu_items");
+    expect(chain.update).toHaveBeenCalledWith({ is_featured: true });
+    expect(chain.eq).toHaveBeenCalledWith("id", "item-1");
+  });
+
+  it("sets is_featured to false when current is true", async () => {
+    const { from, chain } = makeSupabase({ data: null, error: null });
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    await toggleFeatured("item-1", true, { from } as any);
+    expect(chain.update).toHaveBeenCalledWith({ is_featured: false });
   });
 });
