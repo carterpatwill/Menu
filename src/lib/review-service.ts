@@ -1,6 +1,30 @@
 import type { SupabaseClient } from "@supabase/supabase-js";
 import type { Database } from "./supabase/types";
 
+type ReviewRow = Database["public"]["Tables"]["reviews"]["Row"];
+
+export interface ReviewWithTag extends ReviewRow {
+  tag_label: string | null;
+}
+
+export async function listReviews(
+  restaurantId: string,
+  supabase: SupabaseClient<Database>
+): Promise<ReviewWithTag[]> {
+  const { data, error } = await supabase
+    .from("reviews")
+    .select("*, nfc_tags(label)")
+    .eq("restaurant_id", restaurantId)
+    .order("created_at", { ascending: false });
+  if (error || !data) return [];
+  return (data as unknown as Array<ReviewRow & { nfc_tags: { label: string } | null }>).map(
+    (row) => {
+      const { nfc_tags, ...rest } = row;
+      return { ...rest, tag_label: nfc_tags?.label ?? null };
+    }
+  );
+}
+
 export interface ReviewInput {
   restaurantId: string;
   nfcTagId: string;
