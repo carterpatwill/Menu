@@ -1,7 +1,7 @@
 import { redirect } from "next/navigation";
 import Link from "next/link";
 import { createClient } from "@/lib/supabase/server";
-import { Utensils, Tag, BarChart2, Star } from "lucide-react";
+import { Utensils, Tag, BarChart2, Star, Settings } from "lucide-react";
 
 const sections = [
   {
@@ -27,6 +27,12 @@ const sections = [
     icon: Star,
     title: "Reviews",
     description: "Read customer reviews and star ratings",
+  },
+  {
+    href: "/admin/settings",
+    icon: Settings,
+    title: "Settings",
+    description: "Choose your menu theme and tagline",
   },
 ];
 

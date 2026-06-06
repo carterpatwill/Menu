@@ -32,7 +32,8 @@ export async function validateAndUpload(
 
   const { data, error } = await bucket.upload(path, file);
   if (error || !data) {
-    return { error: "Upload failed" };
+    const msg = error instanceof Error ? error.message : (error as { message?: string } | null)?.message ?? "Upload failed";
+    return { error: msg };
   }
 
   const { data: urlData } = bucket.getPublicUrl(data.path);

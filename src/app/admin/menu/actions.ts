@@ -2,7 +2,7 @@
 
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
-import { createClient } from "@/lib/supabase/server";
+import { createClient, createAdminClient } from "@/lib/supabase/server";
 import {
   listItems,
   createItem,
@@ -78,7 +78,7 @@ export async function saveItemAction(
 
   let imageUrl: string | null = null;
   if (photoFile && photoFile.size > 0) {
-    const uploadResult = await validateAndUpload(photoFile, supabase);
+    const uploadResult = await validateAndUpload(photoFile, createAdminClient());
     if ("error" in uploadResult) return { error: uploadResult.error };
     imageUrl = uploadResult.url;
   }

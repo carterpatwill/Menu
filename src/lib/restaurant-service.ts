@@ -37,6 +37,17 @@ export async function toggleCategory(
     .eq("id", restaurantId);
 }
 
+export async function updateRestaurantSettings(
+  restaurantId: string,
+  settings: { theme: string; tagline: string },
+  supabase: Supabase
+): Promise<void> {
+  await supabase
+    .from("restaurants")
+    .update(settings)
+    .eq("id", restaurantId);
+}
+
 export async function getRestaurantById(
   restaurantId: string,
   supabase: Supabase

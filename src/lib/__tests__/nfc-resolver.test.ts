@@ -18,6 +18,8 @@ const RESTAURANT: DbRestaurant = {
   name: "The Test Kitchen",
   slug: "test-kitchen",
   owner_id: "user-1",
+  theme: "warm",
+  tagline: "",
   has_specials: true,
   has_appetizers: false,
   has_mains: true,

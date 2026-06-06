@@ -10,6 +10,8 @@ const baseRestaurant: DbRestaurant = {
   name: "Test Restaurant",
   slug: "test",
   owner_id: "u1",
+  theme: "warm",
+  tagline: "",
   has_specials: true,
   has_appetizers: true,
   has_mains: true,

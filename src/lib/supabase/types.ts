@@ -1,166 +1,238 @@
+export type Json =
+  | string
+  | number
+  | boolean
+  | null
+  | { [key: string]: Json | undefined }
+  | Json[]
+
 export type Database = {
+  // Allows to automatically instantiate createClient with right options
+  // instead of createClient<Database, { PostgrestVersion: 'XX' }>(URL, KEY)
+  __InternalSupabase: {
+    PostgrestVersion: "14.5"
+  }
   public: {
     Tables: {
-      restaurants: {
-        Row: {
-          id: string;
-          name: string;
-          slug: string;
-          owner_id: string;
-          has_specials: boolean;
-          has_appetizers: boolean;
-          has_mains: boolean;
-          has_sides: boolean;
-          has_drinks: boolean;
-          has_desserts: boolean;
-        };
-        Insert: {
-          id?: string;
-          name: string;
-          slug: string;
-          owner_id: string;
-          has_specials?: boolean;
-          has_appetizers?: boolean;
-          has_mains?: boolean;
-          has_sides?: boolean;
-          has_drinks?: boolean;
-          has_desserts?: boolean;
-        };
-        Update: {
-          id?: string;
-          name?: string;
-          slug?: string;
-          owner_id?: string;
-          has_specials?: boolean;
-          has_appetizers?: boolean;
-          has_mains?: boolean;
-          has_sides?: boolean;
-          has_drinks?: boolean;
-          has_desserts?: boolean;
-        };
-        Relationships: [];
-      };
-      menu_items: {
-        Row: {
-          id: string;
-          restaurant_id: string;
-          name: string;
-          description: string;
-          price: number;
-          category: Database["public"]["Enums"]["category"];
-          image_url: string | null;
-          is_featured: boolean;
-          is_available: boolean;
-          sort_order: number;
-        };
-        Insert: {
-          id?: string;
-          restaurant_id: string;
-          name: string;
-          description: string;
-          price: number;
-          category: Database["public"]["Enums"]["category"];
-          image_url?: string | null;
-          is_featured?: boolean;
-          is_available?: boolean;
-          sort_order?: number;
-        };
-        Update: {
-          id?: string;
-          restaurant_id?: string;
-          name?: string;
-          description?: string;
-          price?: number;
-          category?: Database["public"]["Enums"]["category"];
-          image_url?: string | null;
-          is_featured?: boolean;
-          is_available?: boolean;
-          sort_order?: number;
-        };
-        Relationships: [];
-      };
-      nfc_tags: {
-        Row: {
-          id: string;
-          restaurant_id: string;
-          label: string;
-          created_at: string;
-        };
-        Insert: {
-          id?: string;
-          restaurant_id: string;
-          label: string;
-          created_at?: string;
-        };
-        Update: {
-          id?: string;
-          restaurant_id?: string;
-          label?: string;
-          created_at?: string;
-        };
-        Relationships: [];
-      };
       click_events: {
         Row: {
-          id: string;
-          restaurant_id: string;
-          nfc_tag_id: string;
-          event_type: Database["public"]["Enums"]["event_type"];
-          menu_item_id: string | null;
-          created_at: string;
-        };
+          created_at: string
+          event_type: Database["public"]["Enums"]["event_type"]
+          id: string
+          menu_item_id: string | null
+          nfc_tag_id: string
+          restaurant_id: string
+        }
         Insert: {
-          id?: string;
-          restaurant_id: string;
-          nfc_tag_id: string;
-          event_type: Database["public"]["Enums"]["event_type"];
-          menu_item_id?: string | null;
-          created_at?: string;
-        };
+          created_at?: string
+          event_type: Database["public"]["Enums"]["event_type"]
+          id?: string
+          menu_item_id?: string | null
+          nfc_tag_id: string
+          restaurant_id: string
+        }
         Update: {
-          id?: string;
-          restaurant_id?: string;
-          nfc_tag_id?: string;
-          event_type?: Database["public"]["Enums"]["event_type"];
-          menu_item_id?: string | null;
-          created_at?: string;
-        };
-        Relationships: [];
-      };
+          created_at?: string
+          event_type?: Database["public"]["Enums"]["event_type"]
+          id?: string
+          menu_item_id?: string | null
+          nfc_tag_id?: string
+          restaurant_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "click_events_menu_item_id_fkey"
+            columns: ["menu_item_id"]
+            isOneToOne: false
+            referencedRelation: "menu_items"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "click_events_nfc_tag_id_fkey"
+            columns: ["nfc_tag_id"]
+            isOneToOne: false
+            referencedRelation: "nfc_tags"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "click_events_restaurant_id_fkey"
+            columns: ["restaurant_id"]
+            isOneToOne: false
+            referencedRelation: "restaurants"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      menu_items: {
+        Row: {
+          category: Database["public"]["Enums"]["category"]
+          description: string
+          id: string
+          image_url: string | null
+          is_available: boolean
+          is_featured: boolean
+          name: string
+          price: number
+          restaurant_id: string
+          sort_order: number
+        }
+        Insert: {
+          category: Database["public"]["Enums"]["category"]
+          description?: string
+          id?: string
+          image_url?: string | null
+          is_available?: boolean
+          is_featured?: boolean
+          name: string
+          price: number
+          restaurant_id: string
+          sort_order?: number
+        }
+        Update: {
+          category?: Database["public"]["Enums"]["category"]
+          description?: string
+          id?: string
+          image_url?: string | null
+          is_available?: boolean
+          is_featured?: boolean
+          name?: string
+          price?: number
+          restaurant_id?: string
+          sort_order?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "menu_items_restaurant_id_fkey"
+            columns: ["restaurant_id"]
+            isOneToOne: false
+            referencedRelation: "restaurants"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      nfc_tags: {
+        Row: {
+          created_at: string
+          id: string
+          label: string
+          restaurant_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          label?: string
+          restaurant_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          label?: string
+          restaurant_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "nfc_tags_restaurant_id_fkey"
+            columns: ["restaurant_id"]
+            isOneToOne: false
+            referencedRelation: "restaurants"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      restaurants: {
+        Row: {
+          has_appetizers: boolean
+          has_desserts: boolean
+          has_drinks: boolean
+          has_mains: boolean
+          has_sides: boolean
+          has_specials: boolean
+          id: string
+          name: string
+          owner_id: string
+          slug: string
+          tagline: string
+          theme: string
+        }
+        Insert: {
+          has_appetizers?: boolean
+          has_desserts?: boolean
+          has_drinks?: boolean
+          has_mains?: boolean
+          has_sides?: boolean
+          has_specials?: boolean
+          id?: string
+          name: string
+          owner_id: string
+          slug: string
+          tagline?: string
+          theme?: string
+        }
+        Update: {
+          has_appetizers?: boolean
+          has_desserts?: boolean
+          has_drinks?: boolean
+          has_mains?: boolean
+          has_sides?: boolean
+          has_specials?: boolean
+          id?: string
+          name?: string
+          owner_id?: string
+          slug?: string
+          tagline?: string
+          theme?: string
+        }
+        Relationships: []
+      }
       reviews: {
         Row: {
-          id: string;
-          restaurant_id: string;
-          nfc_tag_id: string;
-          body: string;
-          rating: number;
-          created_at: string;
-        };
+          body: string
+          created_at: string
+          id: string
+          nfc_tag_id: string
+          rating: number
+          restaurant_id: string
+        }
         Insert: {
-          id?: string;
-          restaurant_id: string;
-          nfc_tag_id: string;
-          body: string;
-          rating: number;
-          created_at?: string;
-        };
+          body: string
+          created_at?: string
+          id?: string
+          nfc_tag_id: string
+          rating: number
+          restaurant_id: string
+        }
         Update: {
-          id?: string;
-          restaurant_id?: string;
-          nfc_tag_id?: string;
-          body?: string;
-          rating?: number;
-          created_at?: string;
-        };
-        Relationships: [];
-      };
-    };
+          body?: string
+          created_at?: string
+          id?: string
+          nfc_tag_id?: string
+          rating?: number
+          restaurant_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "reviews_nfc_tag_id_fkey"
+            columns: ["nfc_tag_id"]
+            isOneToOne: false
+            referencedRelation: "nfc_tags"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "reviews_restaurant_id_fkey"
+            columns: ["restaurant_id"]
+            isOneToOne: false
+            referencedRelation: "restaurants"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+    }
     Views: {
-      [_ in never]: never;
-    };
+      [_ in never]: never
+    }
     Functions: {
-      [_ in never]: never;
-    };
+      [_ in never]: never
+    }
     Enums: {
       category:
         | "specials"
@@ -168,8 +240,144 @@ export type Database = {
         | "mains"
         | "sides"
         | "drinks"
-        | "desserts";
-      event_type: "menu_open" | "item_tap";
-    };
-  };
-};
+        | "desserts"
+      event_type: "menu_open" | "item_tap"
+    }
+    CompositeTypes: {
+      [_ in never]: never
+    }
+  }
+}
+
+type DatabaseWithoutInternals = Omit<Database, "__InternalSupabase">
+
+type DefaultSchema = DatabaseWithoutInternals[Extract<keyof Database, "public">]
+
+export type Tables<
+  DefaultSchemaTableNameOrOptions extends
+    | keyof (DefaultSchema["Tables"] & DefaultSchema["Views"])
+    | { schema: keyof DatabaseWithoutInternals },
+  TableName extends DefaultSchemaTableNameOrOptions extends {
+    schema: keyof DatabaseWithoutInternals
+  }
+    ? keyof (DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Tables"] &
+        DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Views"])
+    : never = never,
+> = DefaultSchemaTableNameOrOptions extends {
+  schema: keyof DatabaseWithoutInternals
+}
+  ? (DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Tables"] &
+      DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Views"])[TableName] extends {
+      Row: infer R
+    }
+    ? R
+    : never
+  : DefaultSchemaTableNameOrOptions extends keyof (DefaultSchema["Tables"] &
+        DefaultSchema["Views"])
+    ? (DefaultSchema["Tables"] &
+        DefaultSchema["Views"])[DefaultSchemaTableNameOrOptions] extends {
+        Row: infer R
+      }
+      ? R
+      : never
+    : never
+
+export type TablesInsert<
+  DefaultSchemaTableNameOrOptions extends
+    | keyof DefaultSchema["Tables"]
+    | { schema: keyof DatabaseWithoutInternals },
+  TableName extends DefaultSchemaTableNameOrOptions extends {
+    schema: keyof DatabaseWithoutInternals
+  }
+    ? keyof DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Tables"]
+    : never = never,
+> = DefaultSchemaTableNameOrOptions extends {
+  schema: keyof DatabaseWithoutInternals
+}
+  ? DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Tables"][TableName] extends {
+      Insert: infer I
+    }
+    ? I
+    : never
+  : DefaultSchemaTableNameOrOptions extends keyof DefaultSchema["Tables"]
+    ? DefaultSchema["Tables"][DefaultSchemaTableNameOrOptions] extends {
+        Insert: infer I
+      }
+      ? I
+      : never
+    : never
+
+export type TablesUpdate<
+  DefaultSchemaTableNameOrOptions extends
+    | keyof DefaultSchema["Tables"]
+    | { schema: keyof DatabaseWithoutInternals },
+  TableName extends DefaultSchemaTableNameOrOptions extends {
+    schema: keyof DatabaseWithoutInternals
+  }
+    ? keyof DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Tables"]
+    : never = never,
+> = DefaultSchemaTableNameOrOptions extends {
+  schema: keyof DatabaseWithoutInternals
+}
+  ? DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Tables"][TableName] extends {
+      Update: infer U
+    }
+    ? U
+    : never
+  : DefaultSchemaTableNameOrOptions extends keyof DefaultSchema["Tables"]
+    ? DefaultSchema["Tables"][DefaultSchemaTableNameOrOptions] extends {
+        Update: infer U
+      }
+      ? U
+      : never
+    : never
+
+export type Enums<
+  DefaultSchemaEnumNameOrOptions extends
+    | keyof DefaultSchema["Enums"]
+    | { schema: keyof DatabaseWithoutInternals },
+  EnumName extends DefaultSchemaEnumNameOrOptions extends {
+    schema: keyof DatabaseWithoutInternals
+  }
+    ? keyof DatabaseWithoutInternals[DefaultSchemaEnumNameOrOptions["schema"]]["Enums"]
+    : never = never,
+> = DefaultSchemaEnumNameOrOptions extends {
+  schema: keyof DatabaseWithoutInternals
+}
+  ? DatabaseWithoutInternals[DefaultSchemaEnumNameOrOptions["schema"]]["Enums"][EnumName]
+  : DefaultSchemaEnumNameOrOptions extends keyof DefaultSchema["Enums"]
+    ? DefaultSchema["Enums"][DefaultSchemaEnumNameOrOptions]
+    : never
+
+export type CompositeTypes<
+  PublicCompositeTypeNameOrOptions extends
+    | keyof DefaultSchema["CompositeTypes"]
+    | { schema: keyof DatabaseWithoutInternals },
+  CompositeTypeName extends PublicCompositeTypeNameOrOptions extends {
+    schema: keyof DatabaseWithoutInternals
+  }
+    ? keyof DatabaseWithoutInternals[PublicCompositeTypeNameOrOptions["schema"]]["CompositeTypes"]
+    : never = never,
+> = PublicCompositeTypeNameOrOptions extends {
+  schema: keyof DatabaseWithoutInternals
+}
+  ? DatabaseWithoutInternals[PublicCompositeTypeNameOrOptions["schema"]]["CompositeTypes"][CompositeTypeName]
+  : PublicCompositeTypeNameOrOptions extends keyof DefaultSchema["CompositeTypes"]
+    ? DefaultSchema["CompositeTypes"][PublicCompositeTypeNameOrOptions]
+    : never
+
+export const Constants = {
+  public: {
+    Enums: {
+      category: [
+        "specials",
+        "appetizers",
+        "mains",
+        "sides",
+        "drinks",
+        "desserts",
+      ],
+      event_type: ["menu_open", "item_tap"],
+    },
+  },
+} as const

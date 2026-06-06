@@ -56,8 +56,8 @@ export function toThemeRestaurant(
   );
   return {
     name: restaurant.name,
-    tagline: "",
-    theme: "warm",
+    tagline: restaurant.tagline,
+    theme: (restaurant.theme as Restaurant["theme"]) ?? "warm",
     enabledCategories,
     items: items.map(toMenuItem),
   };
