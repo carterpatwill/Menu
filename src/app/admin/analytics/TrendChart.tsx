@@ -3,8 +3,8 @@
 import { useMemo, useState } from "react";
 import type { DailyPoint } from "@/lib/analytics-service";
 
-const OPENS_COLOR = "#3a7bd5";
-const TAPS_COLOR = "#e8a52b";
+const OPENS_COLOR = "#3D5A27";
+const TAPS_COLOR = "#5d7a52";
 
 function niceMax(raw: number): number {
   if (raw <= 5) return 5;
@@ -16,13 +16,12 @@ function niceMax(raw: number): number {
   return 10 * pow;
 }
 
-function formatDate(iso: string, short = false): string {
+function formatDate(iso: string): string {
   const d = new Date(`${iso}T00:00:00Z`);
   return d.toLocaleDateString(undefined, {
     month: "short",
     day: "numeric",
     timeZone: "UTC",
-    weekday: short ? undefined : undefined,
   });
 }
 
@@ -81,7 +80,7 @@ export function TrendChart({ data }: { data: DailyPoint[] }) {
   const total = data.reduce((s, d) => s + d.opens + d.taps, 0);
   if (total === 0) {
     return (
-      <div className="flex h-[280px] items-center justify-center text-sm text-gray-400">
+      <div style={{ height: 280, display: "flex", alignItems: "center", justifyContent: "center", fontSize: 13.5, color: "var(--ink-faint)" }}>
         Not enough data yet.
       </div>
     );
@@ -91,17 +90,17 @@ export function TrendChart({ data }: { data: DailyPoint[] }) {
   const hoverX = hoverIdx !== null ? xAt(hoverIdx) : 0;
 
   return (
-    <div className="relative">
+    <div style={{ position: "relative" }}>
       <svg
         viewBox={`0 0 ${W} ${H}`}
-        className="block w-full"
+        style={{ display: "block", width: "100%" }}
         onMouseMove={handleMove}
         onMouseLeave={() => setHoverIdx(null)}
         role="img"
         aria-label="Opens and taps trend"
       >
         <defs>
-          <linearGradient id="opens-fill" x1="0" y1="0" x2="0" y2="1">
+          <linearGradient id="trend-opens-fill" x1="0" y1="0" x2="0" y2="1">
             <stop offset="0%" stopColor={OPENS_COLOR} stopOpacity="0.18" />
             <stop offset="100%" stopColor={OPENS_COLOR} stopOpacity="0" />
           </linearGradient>
@@ -114,14 +113,14 @@ export function TrendChart({ data }: { data: DailyPoint[] }) {
               x2={padL + innerW}
               y1={g.y}
               y2={g.y}
-              stroke="#f1f1f1"
+              stroke="var(--line)"
               strokeWidth={1}
             />
             <text
               x={padL - 8}
               y={g.y + 3}
               fontSize={10}
-              fill="#9ca3af"
+              fill="var(--ink-faint)"
               textAnchor="end"
             >
               {g.label}
@@ -129,7 +128,7 @@ export function TrendChart({ data }: { data: DailyPoint[] }) {
           </g>
         ))}
 
-        <path d={opensArea} fill="url(#opens-fill)" />
+        <path d={opensArea} fill="url(#trend-opens-fill)" />
         <path d={opensPath} fill="none" stroke={OPENS_COLOR} strokeWidth={2} />
         <path d={tapsPath} fill="none" stroke={TAPS_COLOR} strokeWidth={2} />
 
@@ -139,7 +138,7 @@ export function TrendChart({ data }: { data: DailyPoint[] }) {
             x={xAt(i)}
             y={padT + innerH + 18}
             fontSize={10}
-            fill="#9ca3af"
+            fill="var(--ink-faint)"
             textAnchor="middle"
           >
             {formatDate(data[i].date)}
@@ -153,34 +152,42 @@ export function TrendChart({ data }: { data: DailyPoint[] }) {
               x2={hoverX}
               y1={padT}
               y2={padT + innerH}
-              stroke="#d1d5db"
+              stroke="var(--ink-faint)"
               strokeWidth={1}
               strokeDasharray="3 3"
             />
-            <circle cx={hoverX} cy={yAt(hover.opens)} r={4} fill="#fff" stroke={OPENS_COLOR} strokeWidth={2} />
-            <circle cx={hoverX} cy={yAt(hover.taps)} r={4} fill="#fff" stroke={TAPS_COLOR} strokeWidth={2} />
+            <circle cx={hoverX} cy={yAt(hover.opens)} r={4} fill="var(--surface)" stroke={OPENS_COLOR} strokeWidth={2} />
+            <circle cx={hoverX} cy={yAt(hover.taps)} r={4} fill="var(--surface)" stroke={TAPS_COLOR} strokeWidth={2} />
           </g>
         )}
       </svg>
 
       {hover && hoverIdx !== null && (
         <div
-          className="pointer-events-none absolute -translate-x-1/2 rounded-lg border border-gray-200 bg-white px-3 py-2 text-xs shadow-md"
           style={{
+            position: "absolute",
+            pointerEvents: "none",
+            transform: "translateX(-50%)",
+            borderRadius: 10,
+            border: "1px solid var(--line)",
+            background: "var(--surface)",
+            padding: "8px 12px",
+            fontSize: 12,
+            boxShadow: "var(--shadow-lift)",
             left: `${(hoverX / W) * 100}%`,
             top: 0,
           }}
         >
-          <div className="font-medium text-gray-900">{formatDate(hover.date)}</div>
-          <div className="mt-1 flex items-center gap-2 text-gray-600">
-            <span className="inline-block h-2 w-2 rounded-full" style={{ background: OPENS_COLOR }} />
-            <span className="tabular-nums">{hover.opens}</span>
-            <span className="text-gray-400">opens</span>
+          <div style={{ fontWeight: 600, color: "var(--ink)" }}>{formatDate(hover.date)}</div>
+          <div style={{ marginTop: 4, display: "flex", alignItems: "center", gap: 6, color: "var(--ink-soft)" }}>
+            <span style={{ display: "inline-block", width: 8, height: 8, borderRadius: 999, background: OPENS_COLOR }} />
+            <span style={{ fontVariantNumeric: "tabular-nums" }}>{hover.opens}</span>
+            <span style={{ color: "var(--ink-faint)" }}>opens</span>
           </div>
-          <div className="mt-0.5 flex items-center gap-2 text-gray-600">
-            <span className="inline-block h-2 w-2 rounded-full" style={{ background: TAPS_COLOR }} />
-            <span className="tabular-nums">{hover.taps}</span>
-            <span className="text-gray-400">taps</span>
+          <div style={{ marginTop: 2, display: "flex", alignItems: "center", gap: 6, color: "var(--ink-soft)" }}>
+            <span style={{ display: "inline-block", width: 8, height: 8, borderRadius: 999, background: TAPS_COLOR }} />
+            <span style={{ fontVariantNumeric: "tabular-nums" }}>{hover.taps}</span>
+            <span style={{ color: "var(--ink-faint)" }}>taps</span>
           </div>
         </div>
       )}

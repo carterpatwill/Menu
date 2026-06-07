@@ -1,6 +1,8 @@
 "use client";
 
 import { useState, useRef } from "react";
+import Link from "next/link";
+import { Plus, ExternalLink, Pencil, Trash2, Star } from "lucide-react";
 import {
   saveItemAction,
   toggleAvailableAction,
@@ -63,22 +65,12 @@ export function MenuManager({
   const [saving, setSaving] = useState(false);
   const [confirmDeleteId, setConfirmDeleteId] = useState<string | null>(null);
   const formRef = useRef<HTMLFormElement>(null);
-  const iframeRef = useRef<HTMLIFrameElement>(null);
-
-  function refreshPreview() {
-    try {
-      iframeRef.current?.contentWindow?.location.reload();
-    } catch {
-      // cross-origin guard — shouldn't happen on same origin
-    }
-  }
 
   async function handleToggle(item: MenuItem) {
     setItems((prev) =>
       prev.map((i) => (i.id === item.id ? { ...i, is_available: !i.is_available } : i))
     );
     await toggleAvailableAction(item.id, item.is_available);
-    refreshPreview();
   }
 
   async function handleTogglePin(item: MenuItem) {
@@ -86,7 +78,6 @@ export function MenuManager({
       prev.map((i) => (i.id === item.id ? { ...i, is_featured: !i.is_featured } : i))
     );
     await toggleFeaturedAction(item.id, item.is_featured);
-    refreshPreview();
   }
 
   async function handleToggleCategory(category: Category) {
@@ -94,14 +85,12 @@ export function MenuManager({
     const next = !restaurant[flag];
     setRestaurant((prev) => ({ ...prev, [flag]: next }));
     await toggleCategoryAction(category, next);
-    refreshPreview();
   }
 
   async function handleDelete(id: string) {
     setItems((prev) => prev.filter((i) => i.id !== id));
     setConfirmDeleteId(null);
     await deleteItemAction(id);
-    refreshPreview();
   }
 
   async function handleSave(e: React.FormEvent<HTMLFormElement>) {
@@ -135,416 +124,125 @@ export function MenuManager({
 
   return (
     <>
-      {/* ── Two-panel layout ── */}
-      <div style={{ display: "flex", alignItems: "flex-start" }}>
+      <style
+        dangerouslySetInnerHTML={{
+          __html: `
+.menu-item-row { background: var(--surface); border: 1px solid var(--line); border-radius: 12px; padding: 14px 18px; display: flex; align-items: center; gap: 16px; box-shadow: var(--shadow); }
+.menu-thumb { width: 48px; height: 48px; border-radius: 10px; object-fit: cover; flex-shrink: 0; }
+.menu-thumb-empty { width: 48px; height: 48px; border-radius: 10px; background: var(--surface-2); border: 1px solid var(--line); flex-shrink: 0; display: grid; place-items: center; font-size: 18px; }
+.menu-section + .menu-section { margin-top: 32px; }
+.menu-section-head { display: flex; align-items: center; gap: 10px; margin-bottom: 12px; }
+.menu-section-head h2 { font-size: 16px; font-weight: 600; margin: 0; letter-spacing: -0.01em; }
+.cat-toggles { display: flex; flex-wrap: wrap; gap: 8px; }
+`,
+        }}
+      />
 
-        {/* ── Left: admin controls ── */}
-        <div style={{ flex: 1, minWidth: 0, minHeight: "100vh", backgroundColor: "#ffffff" }}>
-
-          {/* Header */}
-          <div
-            style={{
-              padding: "2.75rem 2.5rem 0",
-              display: "flex",
-              alignItems: "flex-end",
-              justifyContent: "space-between",
-              gap: "1rem",
-              flexWrap: "wrap",
-            }}
-          >
-            <div>
-              <a
-                href="/admin"
-                style={{
-                  display: "inline-flex",
-                  alignItems: "center",
-                  gap: "0.3rem",
-                  fontFamily: "var(--font-geist-sans)",
-                  fontSize: "0.8125rem",
-                  color: "#a8a09a",
-                  textDecoration: "none",
-                  margin: "0 0 0.5rem",
-                  letterSpacing: "0.02em",
-                }}
-              >
-                ← Admin
-              </a>
-              <p
-                style={{
-                  fontFamily: "var(--font-geist-sans)",
-                  fontSize: "0.8125rem",
-                  color: "#a8a09a",
-                  margin: "0 0 0.25rem",
-                  letterSpacing: "0.06em",
-                  textTransform: "uppercase",
-                }}
-              >
-                {restaurant.name}
-              </p>
-              <h1
-                style={{
-                  fontFamily: "var(--font-geist-sans)",
-                  fontSize: "2.875rem",
-                  fontWeight: "bold",
-                  color: "#111827",
-                  margin: 0,
-                  lineHeight: 1.08,
-                  letterSpacing: "-0.025em",
-                }}
-              >
-                Menu Items
-              </h1>
-              <p style={{ color: "#9ca3af", margin: "0.5rem 0 0", fontSize: "0.9375rem" }}>
-                {items.length} item{items.length !== 1 ? "s" : ""} &middot;{" "}
-                {activeCount} active{" "}
-                {activeCount === 1 ? "category" : "categories"}
-              </p>
-            </div>
-
-            <div style={{ display: "flex", alignItems: "center", gap: "0.625rem" }}>
-              <a
-                href={previewTagId ? `/r/${previewTagId}` : "/admin/tags"}
-                target={previewTagId ? "_blank" : undefined}
-                rel="noopener noreferrer"
-                title={
-                  previewTagId
-                    ? "Open customer menu in new tab"
-                    : "Create an NFC tag to get a preview link"
-                }
-                style={{
-                  borderRadius: "9999px",
-                  padding: "0.8125rem 1.5rem",
-                  fontSize: "0.9375rem",
-                  fontWeight: 600,
-                  border: "1.5px solid #d6cfc8",
-                  background: "transparent",
-                  color: "#6b7280",
-                  cursor: "pointer",
-                  display: "flex",
-                  alignItems: "center",
-                  gap: "0.4rem",
-                  whiteSpace: "nowrap",
-                  textDecoration: "none",
-                }}
-              >
-                View Menu
-                <span style={{ fontSize: "0.8125rem", opacity: 0.7 }}>↗</span>
-              </a>
-
-              <button
-                onClick={() => setModalItem("new")}
-                style={{
-                  backgroundColor: "#111827",
-                  color: "#fff",
-                  borderRadius: "9999px",
-                  padding: "0.8125rem 1.75rem",
-                  fontSize: "0.9375rem",
-                  fontWeight: 600,
-                  border: "none",
-                  cursor: "pointer",
-                  display: "flex",
-                  alignItems: "center",
-                  gap: "0.4rem",
-                  whiteSpace: "nowrap",
-                }}
-              >
-                <span style={{ fontSize: "1.15rem", lineHeight: 1, marginTop: -1 }}>+</span>
-                Add Item
-              </button>
-            </div>
-          </div>
-
-          {/* Divider */}
-          <div style={{ height: 1, backgroundColor: "#e5ddd5", margin: "2rem 2.5rem 0" }} />
-
-          {/* Category toggles */}
-          <div style={{ padding: "1.5rem 2.5rem" }}>
-            <p
-              style={{
-                fontSize: "0.6875rem",
-                fontWeight: 700,
-                color: "#a8a09a",
-                letterSpacing: "0.09em",
-                textTransform: "uppercase",
-                margin: "0 0 0.75rem",
-              }}
-            >
-              Visible on menu
+      <main className="wrap">
+        <div className="page-head">
+          <div>
+            <Link href="/admin" className="back-link">← Overview</Link>
+            <h1 className="greeting display">Menu</h1>
+            <p className="subhead">
+              {items.length} item{items.length !== 1 ? "s" : ""} · {activeCount} active{" "}
+              {activeCount === 1 ? "category" : "categories"}
             </p>
-            <div style={{ display: "flex", flexWrap: "wrap", gap: "0.5rem" }}>
-              {CATEGORIES.map((cat) => {
-                const enabled = restaurant[CATEGORY_FLAG[cat]];
-                return (
-                  <button
-                    key={cat}
-                    onClick={() => handleToggleCategory(cat)}
-                    style={{
-                      padding: "0.4rem 1.125rem",
-                      borderRadius: "9999px",
-                      border: enabled ? "none" : "1.5px solid #d6cfc8",
-                      background: enabled ? "#111827" : "transparent",
-                      color: enabled ? "#fff" : "#a8a09a",
-                      fontSize: "0.8125rem",
-                      fontWeight: 600,
-                      cursor: "pointer",
-                      letterSpacing: "0.02em",
-                    }}
-                  >
-                    {cat.charAt(0).toUpperCase() + cat.slice(1)}
-                  </button>
-                );
-              })}
-            </div>
           </div>
-
-          {/* Divider */}
-          <div style={{ height: 1, backgroundColor: "#e5ddd5", margin: "0 2.5rem 2rem" }} />
-
-          {/* Items */}
-          <div style={{ padding: "0 2.5rem 3.5rem" }}>
-            {items.length === 0 ? (
-              <div
-                style={{
-                  textAlign: "center",
-                  padding: "5rem 2rem",
-                  color: "#c4baaf",
-                  fontFamily: "var(--font-geist-sans)",
-                  fontSize: "1.125rem",
-                }}
-              >
-                No menu items yet. Add your first item!
-              </div>
-            ) : (
-              <div style={{ display: "flex", flexDirection: "column", gap: "2.25rem" }}>
-                {CATEGORIES.map((cat) => {
-                  const catItems = grouped[cat];
-                  if (catItems.length === 0) return null;
-                  return (
-                    <section key={cat}>
-                      <h2
-                        style={{
-                          fontFamily: "var(--font-geist-sans)",
-                          fontSize: "1.125rem",
-                          fontWeight: "bold",
-                          color: "#374151",
-                          margin: "0 0 0.875rem",
-                          display: "flex",
-                          alignItems: "center",
-                          gap: "0.625rem",
-                        }}
-                      >
-                        {cat.charAt(0).toUpperCase() + cat.slice(1)}
-                        <span
-                          style={{
-                            fontSize: "0.75rem",
-                            fontFamily: "var(--font-geist-sans)",
-                            fontWeight: 500,
-                            color: "#9ca3af",
-                            backgroundColor: "#f3f4f6",
-                            padding: "0.125rem 0.5rem",
-                            borderRadius: "9999px",
-                          }}
-                        >
-                          {catItems.length}
-                        </span>
-                        {!restaurant[CATEGORY_FLAG[cat]] && (
-                          <span
-                            style={{
-                              fontSize: "0.6875rem",
-                              fontFamily: "var(--font-geist-sans)",
-                              fontWeight: 700,
-                              color: "#d97706",
-                              backgroundColor: "#fef3c7",
-                              padding: "0.125rem 0.5rem",
-                              borderRadius: "9999px",
-                              letterSpacing: "0.05em",
-                              textTransform: "uppercase",
-                            }}
-                          >
-                            Hidden
-                          </span>
-                        )}
-                      </h2>
-
-                      <div style={{ display: "flex", flexDirection: "column", gap: "0.5rem" }}>
-                        {catItems.map((item) => (
-                          <ItemRow
-                            key={item.id}
-                            item={item}
-                            confirmDeleteId={confirmDeleteId}
-                            onToggle={handleToggle}
-                            onTogglePin={handleTogglePin}
-                            onEdit={(i) => setModalItem(i)}
-                            onDeleteRequest={(id) => setConfirmDeleteId(id)}
-                            onDeleteCancel={() => setConfirmDeleteId(null)}
-                            onDeleteConfirm={handleDelete}
-                          />
-                        ))}
-                      </div>
-                    </section>
-                  );
-                })}
-              </div>
-            )}
-          </div>
-        </div>
-
-        {/* ── Right: live preview (desktop only) ── */}
-        <div
-          className="hidden lg:flex flex-col"
-          style={{
-            width: 420,
-            flexShrink: 0,
-            position: "sticky",
-            top: 0,
-            height: "100vh",
-            borderLeft: "1px solid #e5ddd5",
-            backgroundColor: "#faf9f7",
-          }}
-        >
-          {/* Preview header */}
-          <div
-            style={{
-              padding: "1rem 1.25rem",
-              borderBottom: "1px solid #e5ddd5",
-              display: "flex",
-              alignItems: "center",
-              justifyContent: "space-between",
-              flexShrink: 0,
-            }}
-          >
-            <div>
-              <p
-                style={{
-                  fontSize: "0.6875rem",
-                  fontWeight: 700,
-                  color: "#a8a09a",
-                  letterSpacing: "0.09em",
-                  textTransform: "uppercase",
-                  margin: 0,
-                }}
-              >
-                Customer View
-              </p>
-              <p style={{ fontSize: "0.8125rem", color: "#c4baaf", margin: "0.15rem 0 0" }}>
-                {previewTagId ? "Live preview" : "No tag linked yet"}
-              </p>
-            </div>
+          <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
             {previewTagId && (
-              <button
-                onClick={refreshPreview}
-                title="Refresh preview"
-                style={{
-                  width: 32,
-                  height: 32,
-                  borderRadius: "50%",
-                  border: "1.5px solid #e5ddd5",
-                  background: "transparent",
-                  color: "#9ca3af",
-                  fontSize: "1rem",
-                  cursor: "pointer",
-                  display: "flex",
-                  alignItems: "center",
-                  justifyContent: "center",
-                }}
+              <Link
+                href={`/r/${previewTagId}`}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="btn-ghost"
               >
-                ↺
-              </button>
+                <ExternalLink size={14} strokeWidth={2.2} />
+                View live menu
+              </Link>
             )}
+            <button onClick={() => setModalItem("new")} className="btn-primary">
+              <Plus size={16} strokeWidth={2.4} />
+              Add item
+            </button>
           </div>
-
-          {/* Preview body */}
-          {previewTagId ? (
-            <iframe
-              ref={iframeRef}
-              src={`/r/${previewTagId}?preview=1`}
-              style={{ flex: 1, border: "none", width: "100%" }}
-              title="Customer menu preview"
-            />
-          ) : (
-            <div
-              style={{
-                flex: 1,
-                display: "flex",
-                flexDirection: "column",
-                alignItems: "center",
-                justifyContent: "center",
-                padding: "2rem",
-                textAlign: "center",
-                gap: "0.875rem",
-              }}
-            >
-              <p
-                style={{
-                  fontFamily: "var(--font-geist-sans)",
-                  fontSize: "1rem",
-                  color: "#c4baaf",
-                  fontStyle: "italic",
-                  margin: 0,
-                  lineHeight: 1.5,
-                }}
-              >
-                Add an NFC tag to preview your menu as customers see it.
-              </p>
-              <a
-                href="/admin/tags"
-                style={{
-                  padding: "0.5rem 1.25rem",
-                  borderRadius: "9999px",
-                  border: "1.5px solid #d6cfc8",
-                  background: "transparent",
-                  color: "#9ca3af",
-                  fontSize: "0.8125rem",
-                  fontWeight: 600,
-                  textDecoration: "none",
-                }}
-              >
-                Manage Tags →
-              </a>
-            </div>
-          )}
         </div>
-      </div>
 
-      {/* ── Modal ── */}
+        <div className="panel" style={{ marginBottom: 24 }}>
+          <div className="panel-head" style={{ marginBottom: 16 }}>
+            <h2 className="panel-title display">Visible categories</h2>
+          </div>
+          <div className="cat-toggles">
+            {CATEGORIES.map((cat) => {
+              const enabled = restaurant[CATEGORY_FLAG[cat]];
+              return (
+                <button
+                  key={cat}
+                  onClick={() => handleToggleCategory(cat)}
+                  className={`chip ${enabled ? "active" : ""}`}
+                >
+                  {cat.charAt(0).toUpperCase() + cat.slice(1)}
+                </button>
+              );
+            })}
+          </div>
+        </div>
+
+        {items.length === 0 ? (
+          <div className="panel">
+            <div className="empty">No menu items yet. Click “Add item” to create your first.</div>
+          </div>
+        ) : (
+          <div>
+            {CATEGORIES.map((cat) => {
+              const catItems = grouped[cat];
+              if (catItems.length === 0) return null;
+              const enabled = restaurant[CATEGORY_FLAG[cat]];
+              return (
+                <section key={cat} className="menu-section">
+                  <div className="menu-section-head">
+                    <h2 className="display">
+                      {cat.charAt(0).toUpperCase() + cat.slice(1)}
+                    </h2>
+                    <span className="chip" style={{ cursor: "default" }}>
+                      {catItems.length}
+                    </span>
+                    {!enabled && (
+                      <span className="chip negative" style={{ cursor: "default" }}>
+                        Hidden
+                      </span>
+                    )}
+                  </div>
+
+                  <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
+                    {catItems.map((item) => (
+                      <ItemRow
+                        key={item.id}
+                        item={item}
+                        confirmDeleteId={confirmDeleteId}
+                        onToggle={handleToggle}
+                        onTogglePin={handleTogglePin}
+                        onEdit={(i) => setModalItem(i)}
+                        onDeleteRequest={(id) => setConfirmDeleteId(id)}
+                        onDeleteCancel={() => setConfirmDeleteId(null)}
+                        onDeleteConfirm={handleDelete}
+                      />
+                    ))}
+                  </div>
+                </section>
+              );
+            })}
+          </div>
+        )}
+      </main>
+
       {modalItem !== null && (
         <div
-          style={{
-            position: "fixed",
-            inset: 0,
-            background: "rgba(17,24,39,0.55)",
-            display: "flex",
-            alignItems: "center",
-            justifyContent: "center",
-            zIndex: 100,
-            backdropFilter: "blur(4px)",
-            WebkitBackdropFilter: "blur(4px)",
-          }}
+          className="modal-backdrop"
           onClick={(e) => e.target === e.currentTarget && setModalItem(null)}
         >
-          <div
-            style={{
-              background: "#fff",
-              borderRadius: 20,
-              padding: "2.25rem",
-              width: "100%",
-              maxWidth: 460,
-              maxHeight: "90vh",
-              overflowY: "auto",
-              margin: "1rem",
-            }}
-          >
-            <h2
-              style={{
-                fontFamily: "var(--font-geist-sans)",
-                fontSize: "1.875rem",
-                fontWeight: "bold",
-                color: "#111827",
-                marginTop: 0,
-                marginBottom: "1.75rem",
-              }}
-            >
-              {editing ? "Edit Item" : "Add Item"}
+          <div className="modal">
+            <h2 className="modal-title display">
+              {editing ? "Edit item" : "Add item"}
             </h2>
 
             <form ref={formRef} onSubmit={handleSave}>
@@ -554,7 +252,7 @@ export function MenuManager({
                   required
                   defaultValue={editing?.name ?? ""}
                   placeholder="e.g. Mushroom Risotto"
-                  style={inputStyle}
+                  className="input"
                 />
               </FormField>
 
@@ -564,11 +262,11 @@ export function MenuManager({
                   rows={3}
                   defaultValue={editing?.description ?? ""}
                   placeholder="Brief description of the dish…"
-                  style={{ ...inputStyle, resize: "vertical" }}
+                  className="input"
                 />
               </FormField>
 
-              <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "1rem" }}>
+              <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 16 }}>
                 <FormField label="Price">
                   <input
                     name="price"
@@ -578,7 +276,7 @@ export function MenuManager({
                     required
                     defaultValue={editing?.price ?? ""}
                     placeholder="0.00"
-                    style={inputStyle}
+                    className="input"
                   />
                 </FormField>
                 <FormField label="Category">
@@ -586,7 +284,7 @@ export function MenuManager({
                     name="category"
                     required
                     defaultValue={editing?.category ?? ""}
-                    style={inputStyle}
+                    className="input"
                   >
                     <option value="">Select…</option>
                     {CATEGORIES.map((c) => (
@@ -600,7 +298,7 @@ export function MenuManager({
 
               <FormField label="Photo (max 5 MB)">
                 {editing?.image_url && (
-                  <div style={{ marginBottom: "0.75rem" }}>
+                  <div style={{ marginBottom: 10 }}>
                     {/* eslint-disable-next-line @next/next/no-img-element */}
                     <img
                       src={editing.image_url}
@@ -609,7 +307,7 @@ export function MenuManager({
                       height={72}
                       style={{ objectFit: "cover", borderRadius: 10 }}
                     />
-                    <p style={{ fontSize: "0.75rem", color: "#9ca3af", margin: "0.3rem 0 0" }}>
+                    <p style={{ fontSize: 12, color: "var(--ink-faint)", margin: "6px 0 0" }}>
                       Upload a new file to replace
                     </p>
                   </div>
@@ -618,7 +316,7 @@ export function MenuManager({
                   name="photo"
                   type="file"
                   accept="image/*"
-                  style={{ width: "100%", fontSize: "0.875rem", color: "#374151" }}
+                  style={{ width: "100%", fontSize: 13, color: "var(--ink-soft)" }}
                 />
               </FormField>
 
@@ -626,51 +324,28 @@ export function MenuManager({
                 style={{
                   display: "flex",
                   alignItems: "center",
-                  gap: "0.625rem",
+                  gap: 10,
                   cursor: "pointer",
-                  marginBottom: "1.5rem",
+                  marginBottom: 24,
                 }}
               >
                 <input
                   name="is_available"
                   type="checkbox"
                   defaultChecked={editing ? editing.is_available : true}
-                  style={{ width: 16, height: 16 }}
+                  style={{ width: 16, height: 16, accentColor: "var(--accent)" }}
                 />
-                <span style={{ fontSize: "0.9375rem", color: "#374151" }}>Available now</span>
+                <span style={{ fontSize: 14, color: "var(--ink)" }}>Available now</span>
               </label>
 
-              {formError && (
-                <p
-                  style={{
-                    color: "#ef4444",
-                    margin: "0 0 1rem",
-                    fontSize: "0.875rem",
-                    padding: "0.625rem 0.875rem",
-                    background: "#fef2f2",
-                    borderRadius: 8,
-                  }}
-                >
-                  {formError}
-                </p>
-              )}
+              {formError && <p className="error-banner">{formError}</p>}
 
-              <div style={{ display: "flex", gap: "0.75rem" }}>
+              <div style={{ display: "flex", gap: 10 }}>
                 <button
                   type="submit"
                   disabled={saving}
-                  style={{
-                    flex: 1,
-                    backgroundColor: "#111827",
-                    color: "#fff",
-                    borderRadius: "9999px",
-                    padding: "0.9375rem",
-                    fontSize: "0.9375rem",
-                    fontWeight: 600,
-                    border: "none",
-                    cursor: saving ? "not-allowed" : "pointer",
-                    opacity: saving ? 0.6 : 1,
-                  }}
+                  className="btn-primary"
+                  style={{ flex: 1, justifyContent: "center" }}
                 >
                   {saving ? "Saving…" : "Save"}
                 </button>
@@ -680,16 +355,7 @@ export function MenuManager({
                     setModalItem(null);
                     setFormError(null);
                   }}
-                  style={{
-                    padding: "0.9375rem 1.5rem",
-                    borderRadius: "9999px",
-                    border: "1.5px solid #e5e7eb",
-                    background: "transparent",
-                    color: "#374151",
-                    fontSize: "0.9375rem",
-                    fontWeight: 600,
-                    cursor: "pointer",
-                  }}
+                  className="btn-ghost"
                 >
                   Cancel
                 </button>
@@ -701,8 +367,6 @@ export function MenuManager({
     </>
   );
 }
-
-// ── Sub-components ────────────────────────────────────────────────────────────
 
 interface ItemRowProps {
   item: MenuItem;
@@ -726,194 +390,83 @@ function ItemRow({
   onDeleteConfirm,
 }: ItemRowProps) {
   return (
-    <div
-      style={{
-        background: "#fff",
-        borderRadius: 12,
-        padding: "0.875rem 1.125rem",
-        display: "flex",
-        alignItems: "center",
-        gap: "1rem",
-        boxShadow: "0 1px 2px rgba(0,0,0,0.05), 0 0 0 1px rgba(0,0,0,0.04)",
-      }}
-    >
-      {/* Thumbnail */}
+    <div className="menu-item-row">
       {item.image_url ? (
         // eslint-disable-next-line @next/next/no-img-element
-        <img
-          src={item.image_url}
-          alt={item.name}
-          style={{
-            width: 48,
-            height: 48,
-            objectFit: "cover",
-            borderRadius: 8,
-            flexShrink: 0,
-          }}
-        />
+        <img src={item.image_url} alt={item.name} className="menu-thumb" />
       ) : (
-        <div
-          style={{
-            width: 48,
-            height: 48,
-            borderRadius: 8,
-            backgroundColor: "#faf9f7",
-            border: "1px solid #ece7e0",
-            flexShrink: 0,
-            display: "flex",
-            alignItems: "center",
-            justifyContent: "center",
-            fontSize: "1.25rem",
-          }}
-        >
-          🍽
-        </div>
+        <div className="menu-thumb-empty">🍽</div>
       )}
 
-      {/* Name + price */}
       <div style={{ flex: 1, minWidth: 0 }}>
-        <div style={{ display: "flex", alignItems: "center", gap: "0.35rem", overflow: "hidden", minWidth: 0 }}>
-          <span
-            style={{
-              fontWeight: 600,
-              color: "#111827",
-              fontSize: "0.9375rem",
-              whiteSpace: "nowrap",
-              overflow: "hidden",
-              textOverflow: "ellipsis",
-              minWidth: 0,
-            }}
-          >
-            {item.name}
-          </span>
+        <div
+          style={{
+            fontWeight: 600,
+            color: "var(--ink)",
+            fontSize: 14.5,
+            whiteSpace: "nowrap",
+            overflow: "hidden",
+            textOverflow: "ellipsis",
+          }}
+        >
+          {item.name}
         </div>
-        <div style={{ fontSize: "0.8125rem", color: "#9ca3af", marginTop: "0.125rem", fontWeight: 500 }}>
+        <div style={{ fontSize: 13, color: "var(--ink-faint)", marginTop: 2 }}>
           ${item.price.toFixed(2)}
         </div>
       </div>
 
-      {/* Actions */}
-      <div style={{ display: "flex", alignItems: "center", gap: "0.375rem", flexShrink: 0 }}>
-        {/* Pin — desktop only */}
-        <div className="hidden sm:flex">
-          <button
-            onClick={() => onTogglePin(item)}
-            aria-label={item.is_featured ? "Unpin" : "Pin as featured"}
-            style={{
-              width: 30,
-              height: 30,
-              borderRadius: "50%",
-              border: item.is_featured ? "1.5px solid #f59e0b" : "1.5px solid #e5ddd5",
-              background: "transparent",
-              color: item.is_featured ? "#f59e0b" : "#d1c9bf",
-              fontSize: "0.875rem",
-              cursor: "pointer",
-              display: "flex",
-              alignItems: "center",
-              justifyContent: "center",
-            }}
-          >
-            ★
-          </button>
-        </div>
+      <div style={{ display: "flex", alignItems: "center", gap: 6, flexShrink: 0 }}>
+        <button
+          onClick={() => onTogglePin(item)}
+          aria-label={item.is_featured ? "Unpin" : "Pin as featured"}
+          className="icon-btn"
+          style={{
+            color: item.is_featured ? "var(--star)" : "var(--ink-faint)",
+            borderColor: item.is_featured ? "var(--star)" : "var(--line)",
+          }}
+        >
+          <Star size={14} strokeWidth={2} fill={item.is_featured ? "var(--star)" : "none"} />
+        </button>
 
-        {/* Available — always visible */}
         <button
           onClick={() => onToggle(item)}
-          style={{
-            padding: "0.3rem 0.875rem",
-            borderRadius: "9999px",
-            border: "none",
-            background: item.is_available ? "#f0fdf4" : "#fef2f2",
-            color: item.is_available ? "#16a34a" : "#dc2626",
-            fontSize: "0.75rem",
-            fontWeight: 700,
-            cursor: "pointer",
-            letterSpacing: "0.02em",
-          }}
+          className={`chip ${item.is_available ? "positive" : "negative"}`}
         >
           {item.is_available ? "Available" : "86'd"}
         </button>
 
-        {/* Edit — desktop only */}
-        <div className="hidden sm:flex">
-          <button
-            onClick={() => onEdit(item)}
-            style={{
-              width: 30,
-              height: 30,
-              borderRadius: "50%",
-              border: "1.5px solid #e5ddd5",
-              background: "transparent",
-              color: "#9ca3af",
-              fontSize: "0.8125rem",
-              cursor: "pointer",
-              display: "flex",
-              alignItems: "center",
-              justifyContent: "center",
-            }}
-          >
-            ✎
-          </button>
-        </div>
+        <button
+          onClick={() => onEdit(item)}
+          aria-label="Edit"
+          className="icon-btn"
+        >
+          <Pencil size={13} strokeWidth={2} />
+        </button>
 
-        {/* Delete — desktop only */}
-        <div className="hidden sm:flex">
-          {confirmDeleteId === item.id ? (
-            <div style={{ display: "flex", alignItems: "center", gap: "0.375rem" }}>
-              <button
-                onClick={() => onDeleteConfirm(item.id)}
-                style={{
-                  padding: "0.25rem 0.75rem",
-                  borderRadius: "9999px",
-                  border: "none",
-                  background: "#ef4444",
-                  color: "#fff",
-                  fontSize: "0.75rem",
-                  fontWeight: 700,
-                  cursor: "pointer",
-                }}
-              >
-                Delete
-              </button>
-              <button
-                onClick={onDeleteCancel}
-                style={{
-                  padding: "0.25rem 0.625rem",
-                  borderRadius: "9999px",
-                  border: "1.5px solid #e5ddd5",
-                  background: "transparent",
-                  color: "#9ca3af",
-                  fontSize: "0.75rem",
-                  fontWeight: 600,
-                  cursor: "pointer",
-                }}
-              >
-                Cancel
-              </button>
-            </div>
-          ) : (
+        {confirmDeleteId === item.id ? (
+          <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
             <button
-              onClick={() => onDeleteRequest(item.id)}
-              style={{
-                width: 30,
-                height: 30,
-                borderRadius: "50%",
-                border: "1.5px solid #fee2e2",
-                background: "transparent",
-                color: "#fca5a5",
-                fontSize: "1.125rem",
-                lineHeight: 1,
-                cursor: "pointer",
-                display: "flex",
-                alignItems: "center",
-                justifyContent: "center",
-              }}
+              onClick={() => onDeleteConfirm(item.id)}
+              className="btn-danger-solid"
+              style={{ padding: "6px 12px", fontSize: 12.5 }}
             >
-              ×
+              Delete
             </button>
-          )}
-        </div>
+            <button onClick={onDeleteCancel} className="btn-ghost" style={{ padding: "6px 12px", fontSize: 12.5 }}>
+              Cancel
+            </button>
+          </div>
+        ) : (
+          <button
+            onClick={() => onDeleteRequest(item.id)}
+            aria-label="Delete"
+            className="icon-btn"
+            style={{ color: "var(--negative)", borderColor: "rgba(177,73,47,0.25)" }}
+          >
+            <Trash2 size={13} strokeWidth={2} />
+          </button>
+        )}
       </div>
     </div>
   );
@@ -921,34 +474,9 @@ function ItemRow({
 
 function FormField({ label, children }: { label: string; children: React.ReactNode }) {
   return (
-    <div style={{ marginBottom: "1.125rem" }}>
-      {label && (
-        <label
-          style={{
-            display: "block",
-            marginBottom: "0.375rem",
-            fontSize: "0.8125rem",
-            fontWeight: 600,
-            color: "#374151",
-            letterSpacing: "0.02em",
-          }}
-        >
-          {label}
-        </label>
-      )}
+    <div style={{ marginBottom: 18 }}>
+      <label className="field-label">{label}</label>
       {children}
     </div>
   );
 }
-
-const inputStyle: React.CSSProperties = {
-  width: "100%",
-  padding: "0.65rem 0.875rem",
-  border: "1.5px solid #e5e7eb",
-  borderRadius: 10,
-  fontSize: "0.9375rem",
-  boxSizing: "border-box",
-  color: "#111827",
-  backgroundColor: "#fafafa",
-  outline: "none",
-};

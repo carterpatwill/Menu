@@ -18,29 +18,20 @@ export default async function SettingsPage() {
   if (!restaurant) redirect("/admin");
 
   return (
-    <main style={{ minHeight: "100vh", background: "#faf9f7", padding: "2rem" }}>
-      <div style={{ maxWidth: 560, margin: "0 auto" }}>
-        <div style={{ marginBottom: "2rem" }}>
-          <Link
-            href="/admin"
-            style={{ fontSize: "0.875rem", color: "#9ca3af", textDecoration: "none" }}
-          >
-            ← Admin
-          </Link>
-          <h1 style={{ fontSize: "1.5rem", fontWeight: 700, color: "#111827", margin: "0.5rem 0 0.25rem" }}>
-            Settings
-          </h1>
-          <p style={{ color: "#9ca3af", fontSize: "0.9rem", margin: 0 }}>
-            Customise your menu appearance
-          </p>
+    <main className="wrap">
+      <div className="page-head">
+        <div>
+          <Link href="/admin" className="back-link">← Overview</Link>
+          <h1 className="greeting display">Settings</h1>
+          <p className="subhead">Customise your menu appearance.</p>
         </div>
+      </div>
 
-        <div style={{ background: "#fff", border: "1.5px solid #e5e7eb", borderRadius: 12, padding: "1.5rem" }}>
-          <SettingsForm
-            initialTheme={(restaurant.theme as Theme) ?? "warm"}
-            initialTagline={restaurant.tagline ?? ""}
-          />
-        </div>
+      <div className="panel" style={{ maxWidth: 640 }}>
+        <SettingsForm
+          initialTheme={(restaurant.theme as Theme) ?? "warm"}
+          initialTagline={restaurant.tagline ?? ""}
+        />
       </div>
     </main>
   );

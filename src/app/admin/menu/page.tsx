@@ -18,25 +18,8 @@ export default async function AdminMenuPage() {
 
   if (!restaurant) {
     return (
-      <main
-        style={{
-          minHeight: "100vh",
-          backgroundColor: "#fff9f3",
-          display: "flex",
-          alignItems: "center",
-          justifyContent: "center",
-        }}
-      >
-        <p
-          style={{
-            color: "#9ca3af",
-            fontFamily: "Georgia, 'Times New Roman', serif",
-            fontSize: "1.125rem",
-            fontStyle: "italic",
-          }}
-        >
-          No restaurant found for your account.
-        </p>
+      <main className="wrap">
+        <p style={{ color: "var(--ink-soft)" }}>No restaurant found for your account.</p>
       </main>
     );
   }
@@ -51,13 +34,11 @@ export default async function AdminMenuPage() {
     .single();
 
   return (
-    <main>
-      <MenuManager
-        restaurantId={restaurant.id}
-        initialItems={items}
-        initialRestaurant={restaurant}
-        previewTagId={firstTag?.id ?? null}
-      />
-    </main>
+    <MenuManager
+      restaurantId={restaurant.id}
+      initialItems={items}
+      initialRestaurant={restaurant}
+      previewTagId={firstTag?.id ?? null}
+    />
   );
 }

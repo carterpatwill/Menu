@@ -1,6 +1,8 @@
 "use client";
 
 import { useState, useEffect } from "react";
+import Link from "next/link";
+import { Plus, Pencil, Copy, ExternalLink, Radio } from "lucide-react";
 import { createTagAction, updateTagLabelAction } from "./actions";
 import type { Database } from "@/lib/supabase/types";
 
@@ -8,10 +10,9 @@ type NfcTag = Database["public"]["Tables"]["nfc_tags"]["Row"];
 
 interface Props {
   initialTags: NfcTag[];
-  restaurantName: string;
 }
 
-export function TagsManager({ initialTags, restaurantName }: Props) {
+export function TagsManager({ initialTags }: Props) {
   const [tags, setTags] = useState<NfcTag[]>(initialTags);
   const [showAdd, setShowAdd] = useState(false);
   const [addingLabel, setAddingLabel] = useState("");
@@ -78,445 +79,186 @@ export function TagsManager({ initialTags, restaurantName }: Props) {
 
   return (
     <>
-      <div style={{ minHeight: "100vh", backgroundColor: "#ffffff" }}>
-        {/* Header */}
-        <div
-          style={{
-            padding: "2.75rem 2.5rem 0",
-            display: "flex",
-            alignItems: "flex-end",
-            justifyContent: "space-between",
-            gap: "1rem",
-            flexWrap: "wrap",
-          }}
-        >
+      <style
+        dangerouslySetInnerHTML={{
+          __html: `
+.tag-row { background: var(--surface); border: 1px solid var(--line); border-radius: 12px; padding: 14px 18px; display: flex; align-items: center; gap: 16px; box-shadow: var(--shadow); }
+.tag-icon { width: 44px; height: 44px; border-radius: 10px; background: var(--accent-soft); color: var(--accent); display: grid; place-items: center; flex-shrink: 0; }
+.tag-url { font-size: 12px; color: var(--ink-faint); font-family: ui-monospace, SFMono-Regular, Menlo, monospace; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; display: block; margin-top: 2px; }
+.tag-date { font-size: 12px; color: var(--ink-faint); white-space: nowrap; flex-shrink: 0; }
+.tag-edit-input { padding: 6px 10px; border: 1px solid var(--accent); border-radius: 8px; font-size: 14.5px; font-weight: 600; color: var(--ink); outline: none; width: 100%; max-width: 240px; background: var(--surface); font-family: inherit; }
+@media (max-width: 600px) { .tag-date { display: none; } }
+`,
+        }}
+      />
+
+      <main className="wrap">
+        <div className="page-head">
           <div>
-            <a
-              href="/admin"
-              style={{
-                display: "inline-flex",
-                alignItems: "center",
-                gap: "0.3rem",
-                fontFamily: "var(--font-geist-sans)",
-                fontSize: "0.8125rem",
-                color: "#a8a09a",
-                textDecoration: "none",
-                margin: "0 0 0.5rem",
-                letterSpacing: "0.02em",
-              }}
-            >
-              ← Admin
-            </a>
-            <p
-              style={{
-                fontFamily: "var(--font-geist-sans)",
-                fontSize: "0.8125rem",
-                color: "#a8a09a",
-                margin: "0 0 0.25rem",
-                letterSpacing: "0.06em",
-                textTransform: "uppercase",
-              }}
-            >
-              {restaurantName}
-            </p>
-            <h1
-              style={{
-                fontFamily: "var(--font-geist-sans)",
-                fontSize: "2.875rem",
-                fontWeight: "bold",
-                color: "#111827",
-                margin: 0,
-                lineHeight: 1.08,
-                letterSpacing: "-0.025em",
-              }}
-            >
-              NFC Tags
-            </h1>
-            <p style={{ color: "#9ca3af", margin: "0.5rem 0 0", fontSize: "0.9375rem" }}>
-              {tags.length} tag{tags.length !== 1 ? "s" : ""} &middot; Program each URL onto its physical tag
+            <Link href="/admin" className="back-link">← Overview</Link>
+            <h1 className="greeting display">NFC tags</h1>
+            <p className="subhead">
+              {tags.length} tag{tags.length !== 1 ? "s" : ""} · Program each URL onto its physical tag.
             </p>
           </div>
-
-          <button
-            onClick={() => setShowAdd(true)}
-            style={{
-              backgroundColor: "#111827",
-              color: "#fff",
-              borderRadius: "9999px",
-              padding: "0.8125rem 1.75rem",
-              fontSize: "0.9375rem",
-              fontWeight: 600,
-              border: "none",
-              cursor: "pointer",
-              display: "flex",
-              alignItems: "center",
-              gap: "0.4rem",
-              whiteSpace: "nowrap",
-            }}
-          >
-            <span style={{ fontSize: "1.15rem", lineHeight: 1, marginTop: -1 }}>+</span>
-            Add Tag
+          <button onClick={() => setShowAdd(true)} className="btn-primary">
+            <Plus size={16} strokeWidth={2.4} />
+            Add tag
           </button>
         </div>
 
-        {/* Divider */}
-        <div style={{ height: 1, backgroundColor: "#e5ddd5", margin: "2rem 2.5rem 0" }} />
+        {tags.length === 0 ? (
+          <div className="panel">
+            <div className="empty">No tags yet. Add your first NFC tag.</div>
+          </div>
+        ) : (
+          <div style={{ display: "flex", flexDirection: "column", gap: 10, maxWidth: 820 }}>
+            {tags.map((tag) => {
+              const isEditing = editingId === tag.id;
+              const isCopied = copiedId === tag.id;
 
-        {/* Tag list */}
-        <div style={{ padding: "2rem 2.5rem 3.5rem" }}>
-          {tags.length === 0 ? (
-            <div
-              style={{
-                textAlign: "center",
-                padding: "5rem 2rem",
-                color: "#c4baaf",
-                fontFamily: "var(--font-geist-sans)",
-                fontSize: "1.125rem",
-              }}
-            >
-              No tags yet. Add your first NFC tag above.
-            </div>
-          ) : (
-            <div style={{ display: "flex", flexDirection: "column", gap: "0.5rem", maxWidth: 720 }}>
-              {tags.map((tag) => {
-                const isEditing = editingId === tag.id;
-                const isCopied = copiedId === tag.id;
+              return (
+                <div key={tag.id} className="tag-row">
+                  <div className="tag-icon">
+                    <Radio size={20} strokeWidth={2} />
+                  </div>
 
-                return (
-                  <div
-                    key={tag.id}
-                    style={{
-                      background: "#fff",
-                      borderRadius: 12,
-                      padding: "0.875rem 1.125rem",
-                      boxShadow: "0 1px 2px rgba(0,0,0,0.05), 0 0 0 1px rgba(0,0,0,0.04)",
-                      display: "flex",
-                      alignItems: "center",
-                      gap: "1rem",
-                    }}
-                  >
-                    {/* Icon */}
-                    <div
-                      style={{
-                        width: 44,
-                        height: 44,
-                        borderRadius: 8,
-                        backgroundColor: "#faf9f7",
-                        border: "1px solid #ece7e0",
-                        flexShrink: 0,
-                        display: "flex",
-                        alignItems: "center",
-                        justifyContent: "center",
-                        fontSize: "1.25rem",
-                      }}
-                    >
-                      📡
-                    </div>
-
-                    {/* Label + URL */}
-                    <div style={{ flex: 1, minWidth: 0 }}>
-                      {isEditing ? (
-                        <input
-                          value={editingLabel}
-                          onChange={(e) => setEditingLabel(e.target.value)}
-                          autoFocus
-                          onKeyDown={(e) => {
-                            if (e.key === "Enter") saveEdit(tag.id);
-                            if (e.key === "Escape") {
-                              setEditingId(null);
-                              setEditError(null);
-                            }
-                          }}
-                          style={{
-                            padding: "0.3rem 0.6rem",
-                            border: "1.5px solid #111827",
-                            borderRadius: 8,
-                            fontSize: "0.9375rem",
-                            fontWeight: 600,
-                            color: "#111827",
-                            outline: "none",
-                            width: "100%",
-                            maxWidth: 240,
-                            boxSizing: "border-box",
-                          }}
-                        />
-                      ) : (
-                        <p
-                          style={{
-                            fontWeight: 600,
-                            color: "#111827",
-                            fontSize: "0.9375rem",
-                            margin: 0,
-                            whiteSpace: "nowrap",
-                            overflow: "hidden",
-                            textOverflow: "ellipsis",
-                          }}
-                        >
-                          {tag.label}
-                        </p>
-                      )}
-                      <a
-                        href={urlFor(tag.id)}
-                        target="_blank"
-                        rel="noopener noreferrer"
+                  <div style={{ flex: 1, minWidth: 0 }}>
+                    {isEditing ? (
+                      <input
+                        value={editingLabel}
+                        onChange={(e) => setEditingLabel(e.target.value)}
+                        autoFocus
+                        onKeyDown={(e) => {
+                          if (e.key === "Enter") saveEdit(tag.id);
+                          if (e.key === "Escape") {
+                            setEditingId(null);
+                            setEditError(null);
+                          }
+                        }}
+                        className="tag-edit-input"
+                      />
+                    ) : (
+                      <div
                         style={{
-                          fontSize: "0.6875rem",
-                          color: "#a8a09a",
-                          margin: "0.2rem 0 0",
-                          fontFamily: "monospace",
+                          fontWeight: 600,
+                          color: "var(--ink)",
+                          fontSize: 14.5,
                           whiteSpace: "nowrap",
                           overflow: "hidden",
                           textOverflow: "ellipsis",
-                          display: "block",
-                          textDecoration: "none",
                         }}
                       >
-                        {urlFor(tag.id)}
-                      </a>
-                    </div>
-
-                    {/* Created date — desktop only */}
-                    <p
-                      className="hidden sm:block"
-                      style={{
-                        fontSize: "0.75rem",
-                        color: "#c4baaf",
-                        flexShrink: 0,
-                        margin: 0,
-                        whiteSpace: "nowrap",
-                      }}
+                        {tag.label}
+                      </div>
+                    )}
+                    <a
+                      href={urlFor(tag.id)}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="tag-url"
                     >
-                      {new Date(tag.created_at).toLocaleDateString()}
-                    </p>
-
-                    {/* Actions */}
-                    <div style={{ display: "flex", alignItems: "center", gap: "0.375rem", flexShrink: 0 }}>
-                      {isEditing ? (
-                        <>
-                          <button
-                            onClick={() => saveEdit(tag.id)}
-                            style={{
-                              padding: "0.3rem 0.875rem",
-                              borderRadius: "9999px",
-                              border: "none",
-                              background: "#111827",
-                              color: "#fff",
-                              fontSize: "0.75rem",
-                              fontWeight: 700,
-                              cursor: "pointer",
-                            }}
-                          >
-                            Save
-                          </button>
-                          <button
-                            onClick={() => {
-                              setEditingId(null);
-                              setEditError(null);
-                            }}
-                            style={{
-                              padding: "0.3rem 0.75rem",
-                              borderRadius: "9999px",
-                              border: "1.5px solid #e5ddd5",
-                              background: "transparent",
-                              color: "#9ca3af",
-                              fontSize: "0.75rem",
-                              fontWeight: 600,
-                              cursor: "pointer",
-                            }}
-                          >
-                            Cancel
-                          </button>
-                        </>
-                      ) : (
-                        <>
-                          <button
-                            onClick={() => copyUrl(tag.id)}
-                            style={{
-                              padding: "0.3rem 0.875rem",
-                              borderRadius: "9999px",
-                              border: "none",
-                              background: isCopied ? "#f0fdf4" : "#f3f4f6",
-                              color: isCopied ? "#16a34a" : "#374151",
-                              fontSize: "0.75rem",
-                              fontWeight: 700,
-                              cursor: "pointer",
-                              letterSpacing: "0.02em",
-                            }}
-                          >
-                            {isCopied ? "Copied!" : "Copy"}
-                          </button>
-                          <a
-                            href={urlFor(tag.id)}
-                            target="_blank"
-                            rel="noopener noreferrer"
-                            style={{
-                              padding: "0.3rem 0.875rem",
-                              borderRadius: "9999px",
-                              border: "none",
-                              background: "#f3f4f6",
-                              color: "#374151",
-                              fontSize: "0.75rem",
-                              fontWeight: 700,
-                              cursor: "pointer",
-                              letterSpacing: "0.02em",
-                              textDecoration: "none",
-                              display: "inline-flex",
-                              alignItems: "center",
-                            }}
-                          >
-                            Open ↗
-                          </a>
-                          <button
-                            onClick={() => startEdit(tag)}
-                            style={{
-                              width: 30,
-                              height: 30,
-                              borderRadius: "50%",
-                              border: "1.5px solid #e5ddd5",
-                              background: "transparent",
-                              color: "#9ca3af",
-                              fontSize: "0.8125rem",
-                              cursor: "pointer",
-                              display: "flex",
-                              alignItems: "center",
-                              justifyContent: "center",
-                            }}
-                          >
-                            ✎
-                          </button>
-                        </>
-                      )}
-                    </div>
+                      {urlFor(tag.id)}
+                    </a>
                   </div>
-                );
-              })}
-            </div>
-          )}
 
-          {editError && (
-            <p
-              style={{
-                color: "#ef4444",
-                margin: "0.75rem 0 0",
-                fontSize: "0.875rem",
-                padding: "0.625rem 0.875rem",
-                background: "#fef2f2",
-                borderRadius: 8,
-                maxWidth: 720,
-              }}
-            >
-              {editError}
-            </p>
-          )}
-        </div>
-      </div>
+                  <span className="tag-date">
+                    {new Date(tag.created_at).toLocaleDateString()}
+                  </span>
 
-      {/* Add tag modal */}
+                  <div style={{ display: "flex", alignItems: "center", gap: 6, flexShrink: 0 }}>
+                    {isEditing ? (
+                      <>
+                        <button
+                          onClick={() => saveEdit(tag.id)}
+                          className="btn-primary"
+                          style={{ padding: "7px 14px", fontSize: 13 }}
+                        >
+                          Save
+                        </button>
+                        <button
+                          onClick={() => {
+                            setEditingId(null);
+                            setEditError(null);
+                          }}
+                          className="btn-ghost"
+                          style={{ padding: "7px 12px", fontSize: 13 }}
+                        >
+                          Cancel
+                        </button>
+                      </>
+                    ) : (
+                      <>
+                        <button
+                          onClick={() => copyUrl(tag.id)}
+                          className={`chip ${isCopied ? "positive" : ""}`}
+                        >
+                          <Copy size={12} strokeWidth={2.2} style={{ marginRight: 4 }} />
+                          {isCopied ? "Copied" : "Copy"}
+                        </button>
+                        <a
+                          href={urlFor(tag.id)}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="chip"
+                          style={{ textDecoration: "none", display: "inline-flex", alignItems: "center" }}
+                        >
+                          <ExternalLink size={12} strokeWidth={2.2} style={{ marginRight: 4 }} />
+                          Open
+                        </a>
+                        <button
+                          onClick={() => startEdit(tag)}
+                          aria-label="Edit"
+                          className="icon-btn"
+                        >
+                          <Pencil size={13} strokeWidth={2} />
+                        </button>
+                      </>
+                    )}
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+        )}
+
+        {editError && (
+          <p className="error-banner" style={{ marginTop: 12, maxWidth: 820 }}>{editError}</p>
+        )}
+      </main>
+
       {showAdd && (
         <div
-          style={{
-            position: "fixed",
-            inset: 0,
-            background: "rgba(17,24,39,0.55)",
-            display: "flex",
-            alignItems: "center",
-            justifyContent: "center",
-            zIndex: 100,
-            backdropFilter: "blur(4px)",
-            WebkitBackdropFilter: "blur(4px)",
-          }}
+          className="modal-backdrop"
           onClick={(e) => e.target === e.currentTarget && setShowAdd(false)}
         >
-          <div
-            style={{
-              background: "#fff",
-              borderRadius: 20,
-              padding: "2.25rem",
-              width: "100%",
-              maxWidth: 400,
-              margin: "1rem",
-            }}
-          >
-            <h2
-              style={{
-                fontFamily: "var(--font-geist-sans)",
-                fontSize: "1.875rem",
-                fontWeight: "bold",
-                color: "#111827",
-                marginTop: 0,
-                marginBottom: "1.5rem",
-              }}
-            >
-              Add Tag
-            </h2>
+          <div className="modal" style={{ maxWidth: 400 }}>
+            <h2 className="modal-title display">Add tag</h2>
 
             <form onSubmit={handleAdd}>
-              <label
-                style={{
-                  display: "block",
-                  marginBottom: "0.375rem",
-                  fontSize: "0.8125rem",
-                  fontWeight: 600,
-                  color: "#374151",
-                  letterSpacing: "0.02em",
-                }}
-              >
-                Label
-              </label>
-              <input
-                name="label"
-                value={addingLabel}
-                onChange={(e) => setAddingLabel(e.target.value)}
-                placeholder='e.g. "Table 4" or "Bar Seat 2"'
-                required
-                autoFocus
-                style={{
-                  width: "100%",
-                  padding: "0.65rem 0.875rem",
-                  border: "1.5px solid #e5e7eb",
-                  borderRadius: 10,
-                  fontSize: "0.9375rem",
-                  boxSizing: "border-box",
-                  color: "#111827",
-                  backgroundColor: "#fafafa",
-                  outline: "none",
-                  marginBottom: "1.5rem",
-                }}
-              />
+              <div style={{ marginBottom: 24 }}>
+                <label className="field-label">Label</label>
+                <input
+                  name="label"
+                  value={addingLabel}
+                  onChange={(e) => setAddingLabel(e.target.value)}
+                  placeholder='e.g. "Table 4" or "Bar seat 2"'
+                  required
+                  autoFocus
+                  className="input"
+                />
+              </div>
 
-              {addError && (
-                <p
-                  style={{
-                    color: "#ef4444",
-                    margin: "0 0 1rem",
-                    fontSize: "0.875rem",
-                    padding: "0.625rem 0.875rem",
-                    background: "#fef2f2",
-                    borderRadius: 8,
-                  }}
-                >
-                  {addError}
-                </p>
-              )}
+              {addError && <p className="error-banner">{addError}</p>}
 
-              <div style={{ display: "flex", gap: "0.75rem" }}>
+              <div style={{ display: "flex", gap: 10 }}>
                 <button
                   type="submit"
                   disabled={adding}
-                  style={{
-                    flex: 1,
-                    backgroundColor: "#111827",
-                    color: "#fff",
-                    borderRadius: "9999px",
-                    padding: "0.9375rem",
-                    fontSize: "0.9375rem",
-                    fontWeight: 600,
-                    border: "none",
-                    cursor: adding ? "not-allowed" : "pointer",
-                    opacity: adding ? 0.6 : 1,
-                  }}
+                  className="btn-primary"
+                  style={{ flex: 1, justifyContent: "center" }}
                 >
-                  {adding ? "Adding…" : "Add Tag"}
+                  {adding ? "Adding…" : "Add tag"}
                 </button>
                 <button
                   type="button"
@@ -524,16 +266,7 @@ export function TagsManager({ initialTags, restaurantName }: Props) {
                     setShowAdd(false);
                     setAddError(null);
                   }}
-                  style={{
-                    padding: "0.9375rem 1.5rem",
-                    borderRadius: "9999px",
-                    border: "1.5px solid #e5e7eb",
-                    background: "transparent",
-                    color: "#374151",
-                    fontSize: "0.9375rem",
-                    fontWeight: 600,
-                    cursor: "pointer",
-                  }}
+                  className="btn-ghost"
                 >
                   Cancel
                 </button>

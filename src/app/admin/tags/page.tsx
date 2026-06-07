@@ -18,13 +18,13 @@ export default async function AdminTagsPage() {
 
   if (!restaurant) {
     return (
-      <main style={{ padding: "2rem" }}>
-        <p>No restaurant found for your account.</p>
+      <main className="wrap">
+        <p style={{ color: "var(--ink-soft)" }}>No restaurant found for your account.</p>
       </main>
     );
   }
 
   const tags = await listTags(restaurant.id, supabase);
 
-  return <TagsManager initialTags={tags} restaurantName={restaurant.name} />;
+  return <TagsManager initialTags={tags} />;
 }

@@ -33,51 +33,57 @@ export default function LoginPage() {
   }
 
   return (
-    <div className="min-h-screen flex">
+    <div className="min-h-screen flex" style={{ background: "#F0F4F8", fontFamily: "system-ui, -apple-system, sans-serif" }}>
       {/* Left: illustration panel */}
-      <div
-        className="w-[55%] hidden sm:flex flex-col items-center justify-center relative overflow-hidden"
-        style={{ backgroundColor: "#fff9f3" }}
-      >
+      <div className="w-[55%] hidden sm:flex items-center justify-center overflow-hidden" style={{ background: "#E2EAF4" }}>
         <img
-          src="/6413870.jpg"
-          alt="Restaurant dining illustration"
+          src="/restruant/AdobeStock_1904529677.png"
+          alt="Restaurant dining"
           className="w-full h-full object-contain"
         />
       </div>
 
       {/* Right: login panel */}
-      <div className="flex-1 flex flex-col relative bg-white">
+      <div className="flex-1 flex flex-col relative" style={{ background: "#FFFFFF", borderLeft: "1px solid #D0DCE8" }}>
         <div className="flex-1 flex items-center justify-center px-10">
           <div className="w-full max-w-sm space-y-8">
-            <div className="space-y-1 text-center">
+            <div className="space-y-3 text-center">
               <h1
-                className="text-5xl font-bold text-gray-900"
-                style={{ fontFamily: "Georgia, 'Times New Roman', serif" }}
+                className="text-5xl font-bold"
+                style={{ fontFamily: "Georgia, 'Times New Roman', serif", color: "#0057D9" }}
               >
                 Hey Tappi!
               </h1>
-              <p className="text-xl font-bold text-gray-900">Login please</p>
+              <p className="text-xl font-bold" style={{ color: "#0D1B2E" }}>Login please</p>
+              <div className="flex items-center justify-center gap-2 pt-1">
+                <span className="w-2.5 h-2.5 rounded-full inline-block" style={{ backgroundColor: "#0057D9" }} />
+                <span className="w-2.5 h-2.5 rounded-full inline-block" style={{ backgroundColor: "#C98A00" }} />
+                <span className="w-2.5 h-2.5 rounded-full inline-block" style={{ backgroundColor: "#1A7F5A" }} />
+                <span className="w-2.5 h-2.5 rounded-full inline-block" style={{ backgroundColor: "#8096B0" }} />
+              </div>
             </div>
 
             <div className="space-y-4">
               <button
                 onClick={login}
                 disabled={loading}
-                className="w-full bg-gray-900 text-white rounded-full py-4 flex items-center justify-center gap-3 font-semibold text-base hover:bg-gray-700 active:scale-[0.98] transition-all disabled:opacity-50"
+                className="w-full text-white rounded-full py-4 flex items-center justify-center gap-3 font-semibold text-base active:scale-[0.98] transition-all disabled:opacity-50"
+                style={{ backgroundColor: "#0057D9" }}
+                onMouseEnter={e => (e.currentTarget.style.backgroundColor = "#0046B0")}
+                onMouseLeave={e => (e.currentTarget.style.backgroundColor = "#0057D9")}
               >
                 <GoogleIcon />
                 <span>{loading ? "Redirecting…" : "Login with Google"}</span>
               </button>
 
               {error && (
-                <p className="text-red-500 text-sm text-center" role="alert">
+                <p className="text-sm text-center" role="alert" style={{ color: "#C53030" }}>
                   {error}
                 </p>
               )}
             </div>
 
-            <p className="text-center text-sm underline underline-offset-2 text-gray-500 cursor-pointer hover:text-gray-800 transition-colors">
+            <p className="text-center text-sm underline underline-offset-2 cursor-pointer transition-colors" style={{ color: "#4A6080" }}>
               Admin access only
             </p>
           </div>

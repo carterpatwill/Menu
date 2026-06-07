@@ -42,81 +42,68 @@ export function SettingsForm({ initialTheme, initialTagline }: Props) {
   }
 
   return (
-    <form onSubmit={handleSubmit}>
-      <div style={{ marginBottom: "2rem" }}>
-        <label style={{ display: "block", fontWeight: 600, color: "#111827", marginBottom: "0.75rem" }}>
-          Theme
-        </label>
-        <div style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: "0.75rem" }}>
-          {THEMES.map((t) => (
-            <button
-              key={t.value}
-              type="button"
-              onClick={() => setTheme(t.value)}
-              style={{
-                padding: "1rem",
-                borderRadius: 10,
-                border: theme === t.value ? "2px solid #111827" : "1.5px solid #e5e7eb",
-                background: theme === t.value ? "#f9fafb" : "#ffffff",
-                cursor: "pointer",
-                textAlign: "left",
-                fontFamily: "inherit",
-              }}
-            >
-              <div style={{ fontWeight: 600, color: "#111827", fontSize: "0.95rem", marginBottom: "0.25rem" }}>
-                {t.label}
-              </div>
-              <div style={{ fontSize: "0.8rem", color: "#9ca3af" }}>{t.description}</div>
-            </button>
-          ))}
-        </div>
-      </div>
-
-      <div style={{ marginBottom: "2rem" }}>
-        <label style={{ display: "block", fontWeight: 600, color: "#111827", marginBottom: "0.5rem" }}>
-          Tagline
-        </label>
-        <input
-          type="text"
-          value={tagline}
-          onChange={(e) => setTagline(e.target.value)}
-          placeholder="e.g. Fresh ingredients, bold flavours"
-          maxLength={120}
-          style={{
-            width: "100%",
-            padding: "0.6rem 0.85rem",
-            borderRadius: 8,
-            border: "1.5px solid #e5e7eb",
-            fontSize: "0.95rem",
-            fontFamily: "inherit",
-            color: "#111827",
-            boxSizing: "border-box",
-          }}
-        />
-      </div>
-
-      {error && (
-        <p style={{ color: "#ef4444", fontSize: "0.875rem", marginBottom: "1rem" }}>{error}</p>
-      )}
-
-      <button
-        type="submit"
-        disabled={saving}
-        style={{
-          background: "#111827",
-          color: "#fff",
-          border: "none",
-          borderRadius: 8,
-          padding: "0.6rem 1.5rem",
-          fontSize: "0.95rem",
-          fontWeight: 600,
-          cursor: saving ? "not-allowed" : "pointer",
-          opacity: saving ? 0.6 : 1,
-          fontFamily: "inherit",
+    <>
+      <style
+        dangerouslySetInnerHTML={{
+          __html: `
+.theme-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; }
+.theme-card { padding: 16px; border-radius: 12px; border: 1px solid var(--line); background: var(--surface); cursor: pointer; text-align: left; font-family: inherit; transition: all .15s ease; }
+.theme-card:hover { border-color: var(--ink-faint); }
+.theme-card.selected { border-color: var(--accent); background: var(--accent-soft); box-shadow: 0 0 0 3px rgba(61,90,39,0.10); }
+.theme-card .name { font-weight: 600; color: var(--ink); font-size: 15px; margin-bottom: 4px; }
+.theme-card .desc { font-size: 12.5px; color: var(--ink-soft); }
+@media (max-width: 520px) { .theme-grid { grid-template-columns: 1fr; } }
+`,
         }}
-      >
-        {saving ? "Saving…" : saved ? "Saved" : "Save"}
-      </button>
-    </form>
+      />
+
+      <form onSubmit={handleSubmit}>
+        <div style={{ marginBottom: 28 }}>
+          <label className="field-label" style={{ marginBottom: 10 }}>Theme</label>
+          <div className="theme-grid">
+            {THEMES.map((t) => (
+              <button
+                key={t.value}
+                type="button"
+                onClick={() => setTheme(t.value)}
+                className={`theme-card ${theme === t.value ? "selected" : ""}`}
+              >
+                <div className="name">{t.label}</div>
+                <div className="desc">{t.description}</div>
+              </button>
+            ))}
+          </div>
+        </div>
+
+        <div style={{ marginBottom: 24 }}>
+          <label className="field-label">Tagline</label>
+          <input
+            type="text"
+            value={tagline}
+            onChange={(e) => setTagline(e.target.value)}
+            placeholder="e.g. Fresh ingredients, bold flavours"
+            maxLength={120}
+            className="input"
+          />
+        </div>
+
+        {error && <p className="error-banner">{error}</p>}
+
+        <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
+          <button
+            type="submit"
+            disabled={saving}
+            className="btn-primary"
+          >
+            {saving ? "Saving…" : "Save"}
+          </button>
+          {saved && (
+            <span style={{ fontSize: 13, color: "var(--positive)", fontWeight: 600 }}>
+              Saved
+            </span>
+          )}
+        </div>
+      </form>
+    </>
   );
 }

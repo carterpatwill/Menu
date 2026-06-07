@@ -1,18 +1,31 @@
 import { redirect } from "next/navigation";
+import Link from "next/link";
+import { Star } from "lucide-react";
 import { createClient } from "@/lib/supabase/server";
 import { listReviews } from "@/lib/review-service";
 
-const FULL_STARS = "★★★★★";
-const EMPTY_STARS = "☆☆☆☆☆";
-
-function renderStars(rating: number): string {
-  const clamped = Math.max(0, Math.min(5, Math.round(rating)));
-  return FULL_STARS.slice(0, clamped) + EMPTY_STARS.slice(clamped);
+function StarsRow({ rating, size = 14 }: { rating: number; size?: number }) {
+  const rounded = Math.round(rating);
+  return (
+    <span className="stars-inline">
+      {[1, 2, 3, 4, 5].map((s) => {
+        const filled = s <= rounded;
+        return (
+          <Star
+            key={s}
+            size={size}
+            strokeWidth={1.5}
+            fill={filled ? "var(--star)" : "var(--line)"}
+            color={filled ? "var(--star)" : "var(--line)"}
+          />
+        );
+      })}
+    </span>
+  );
 }
 
 function formatTimestamp(iso: string): string {
-  const d = new Date(iso);
-  return d.toLocaleString(undefined, {
+  return new Date(iso).toLocaleString(undefined, {
     dateStyle: "medium",
     timeStyle: "short",
   });
@@ -33,61 +46,55 @@ export default async function AdminReviewsPage() {
 
   if (!restaurant) {
     return (
-      <main style={{ padding: "2rem" }}>
-        <p>No restaurant found for your account.</p>
+      <main className="wrap">
+        <p style={{ color: "var(--ink-soft)" }}>No restaurant found for your account.</p>
       </main>
     );
   }
 
   const reviews = await listReviews(restaurant.id, supabase);
+  const avg =
+    reviews.length === 0
+      ? 0
+      : reviews.reduce((s, r) => s + r.rating, 0) / reviews.length;
 
   return (
-    <main style={{ padding: "2rem", maxWidth: "48rem" }}>
-      <h1>{restaurant.name} — Reviews</h1>
+    <main className="wrap">
+      <div className="page-head">
+        <div>
+          <Link href="/admin" className="back-link">← Overview</Link>
+          <h1 className="greeting display">Reviews</h1>
+          <p className="subhead">
+            {reviews.length === 0
+              ? "No reviews yet — they appear as customers leave them."
+              : `${reviews.length} review${reviews.length === 1 ? "" : "s"} · ${avg.toFixed(1)} average`}
+          </p>
+        </div>
+      </div>
+
       {reviews.length === 0 ? (
-        <p style={{ color: "#555" }}>
-          No reviews yet. They’ll appear here as customers submit them from your
-          menu page.
-        </p>
+        <div className="panel">
+          <div className="empty">No reviews yet.</div>
+        </div>
       ) : (
-        <ul style={{ listStyle: "none", padding: 0, margin: 0 }}>
+        <div className="panel">
           {reviews.map((review) => (
-            <li
-              key={review.id}
-              style={{
-                border: "1px solid #e5e5e5",
-                borderRadius: 8,
-                padding: "1rem",
-                marginBottom: "0.75rem",
-              }}
-            >
-              <div
-                style={{
-                  display: "flex",
-                  justifyContent: "space-between",
-                  alignItems: "baseline",
-                  marginBottom: "0.5rem",
-                }}
-              >
-                <span
-                  aria-label={`${review.rating} out of 5 stars`}
-                  style={{ color: "#e8a52b", fontSize: "1.1rem", letterSpacing: 2 }}
-                >
-                  {renderStars(review.rating)}
-                </span>
-                <span style={{ color: "#777", fontSize: "0.85rem" }}>
-                  {formatTimestamp(review.created_at)}
-                </span>
+            <div className="review" key={review.id}>
+              <div className="review-top">
+                <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
+                  <StarsRow rating={review.rating} />
+                  <span className="review-name">
+                    {review.tag_label ?? "Guest"}
+                  </span>
+                </div>
+                <span className="review-time">{formatTimestamp(review.created_at)}</span>
               </div>
-              <p style={{ margin: "0 0 0.5rem", whiteSpace: "pre-wrap" }}>
+              <p className="review-text" style={{ whiteSpace: "pre-wrap" }}>
                 {review.body}
               </p>
-              <div style={{ color: "#555", fontSize: "0.85rem" }}>
-                {review.tag_label ?? "Unknown tag"}
-              </div>
-            </li>
+            </div>
           ))}
-        </ul>
+        </div>
       )}
     </main>
   );

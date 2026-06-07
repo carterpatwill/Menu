@@ -1,7 +1,6 @@
 import { redirect } from "next/navigation";
 import Link from "next/link";
 import {
-  ArrowLeft,
   ArrowUpRight,
   ArrowDownRight,
   Eye,
@@ -27,11 +26,6 @@ const RANGES: { value: Range; label: string }[] = [
   { value: "30d", label: "30 days" },
   { value: "90d", label: "90 days" },
 ];
-
-const OPENS_COLOR = "#3a7bd5";
-const TAPS_COLOR = "#e8a52b";
-const CONVERSION_COLOR = "#7c3aed";
-const RATING_COLOR = "#f59e0b";
 
 function parseRange(v: string | undefined): Range {
   if (v === "7d" || v === "30d" || v === "90d") return v;
@@ -73,11 +67,7 @@ function DeltaChip({
   kind: "count" | "rate" | "rating";
 }) {
   if (previous === 0 && current === 0) {
-    return (
-      <span className="inline-flex items-center gap-1 rounded-full bg-gray-50 px-1.5 py-0.5 text-[11px] font-medium text-gray-400">
-        no data
-      </span>
-    );
+    return <span className="chip" style={{ cursor: "default", fontSize: 11 }}>no data</span>;
   }
 
   let label: string;
@@ -98,11 +88,9 @@ function DeltaChip({
     label = `${positive ? "+" : ""}${diff.toFixed(1)}`;
   }
 
-  const bg = positive ? "bg-emerald-50 text-emerald-700" : "bg-rose-50 text-rose-700";
   const Icon = positive ? ArrowUpRight : ArrowDownRight;
-
   return (
-    <span className={`inline-flex items-center gap-0.5 rounded-full px-1.5 py-0.5 text-[11px] font-medium ${bg}`}>
+    <span className={`delta ${positive ? "up" : "down"}`} style={{ fontSize: 12 }}>
       <Icon size={11} strokeWidth={2.5} />
       {label}
     </span>
@@ -148,12 +136,19 @@ function KpiTile({
   footer?: string;
 }) {
   return (
-    <div className="rounded-xl border border-gray-200 bg-white p-5 shadow-sm">
-      <div className="mb-3 flex items-center justify-between">
-        <div className="flex items-center gap-2 text-xs font-medium uppercase tracking-wide text-gray-500">
+    <div className="stat">
+      <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 12 }}>
+        <div className="stat-label">
           <span
-            className="flex h-6 w-6 items-center justify-center rounded-md"
-            style={{ background: `${color}14`, color }}
+            style={{
+              display: "inline-grid",
+              placeItems: "center",
+              width: 24,
+              height: 24,
+              borderRadius: 7,
+              background: `${color}1f`,
+              color,
+            }}
           >
             {icon}
           </span>
@@ -161,10 +156,10 @@ function KpiTile({
         </div>
         <DeltaChip current={value} previous={previous} kind={kind} />
       </div>
-      <div className="flex items-end justify-between gap-2">
+      <div style={{ display: "flex", alignItems: "flex-end", justifyContent: "space-between", gap: 8 }}>
         <div>
-          <div className="text-3xl font-semibold tabular-nums text-gray-900">{formatted}</div>
-          {footer && <div className="mt-0.5 text-xs text-gray-400">{footer}</div>}
+          <div className="stat-value" style={{ fontSize: 30 }}>{formatted}</div>
+          {footer && <div style={{ marginTop: 6, fontSize: 12, color: "var(--ink-faint)" }}>{footer}</div>}
         </div>
         <Sparkline values={sparkline} color={color} />
       </div>
@@ -174,16 +169,31 @@ function KpiTile({
 
 function RangeTabs({ current }: { current: Range }) {
   return (
-    <div className="inline-flex rounded-lg border border-gray-200 bg-white p-0.5 shadow-sm">
+    <div
+      style={{
+        display: "inline-flex",
+        borderRadius: 10,
+        border: "1px solid var(--line)",
+        background: "var(--surface)",
+        padding: 3,
+        boxShadow: "var(--shadow)",
+      }}
+    >
       {RANGES.map((r) => {
         const active = r.value === current;
         return (
           <Link
             key={r.value}
             href={`/admin/analytics?range=${r.value}`}
-            className={`rounded-md px-3 py-1 text-xs font-medium transition-colors ${
-              active ? "bg-gray-900 text-white" : "text-gray-600 hover:text-gray-900"
-            }`}
+            style={{
+              padding: "6px 12px",
+              borderRadius: 7,
+              fontSize: 12.5,
+              fontWeight: 600,
+              color: active ? "#fff" : "var(--ink-soft)",
+              background: active ? "var(--ink)" : "transparent",
+              transition: "all .15s ease",
+            }}
           >
             {r.label}
           </Link>
@@ -195,38 +205,39 @@ function RangeTabs({ current }: { current: Range }) {
 
 function LegendDot({ color, label }: { color: string; label: string }) {
   return (
-    <span className="inline-flex items-center gap-1.5 text-gray-500">
-      <span className="inline-block h-2 w-2 rounded-full" style={{ background: color }} />
+    <span style={{ display: "inline-flex", alignItems: "center", gap: 6, color: "var(--ink-soft)", fontSize: 12 }}>
+      <span style={{ display: "inline-block", width: 8, height: 8, borderRadius: 999, background: color }} />
       {label}
     </span>
   );
 }
 
-function TopItemsList({ items }: { items: TopItem[] }) {
+function TopItemsList({ items, accent }: { items: TopItem[]; accent: string }) {
   if (items.length === 0) {
-    return <div className="py-8 text-center text-sm text-gray-400">No item taps in this range.</div>;
+    return <div className="empty">No item taps in this range.</div>;
   }
   const max = Math.max(...items.map((i) => i.count));
   return (
-    <ol className="space-y-2.5">
+    <ol style={{ listStyle: "none", padding: 0, margin: 0, display: "flex", flexDirection: "column", gap: 12 }}>
       {items.map((item, idx) => {
         const pct = (item.count / max) * 100;
         return (
           <li key={item.menuItemId}>
-            <div className="mb-1 flex items-center justify-between text-sm">
-              <span className="flex items-center gap-2 min-w-0">
-                <span className="w-4 shrink-0 text-xs font-medium tabular-nums text-gray-400">
+            <div style={{ display: "flex", justifyContent: "space-between", marginBottom: 5, fontSize: 13.5 }}>
+              <span style={{ display: "flex", alignItems: "center", gap: 8, minWidth: 0 }}>
+                <span style={{ width: 16, color: "var(--ink-faint)", fontVariantNumeric: "tabular-nums", fontSize: 12 }}>
                   {idx + 1}
                 </span>
-                <span className="truncate text-gray-900">{item.name}</span>
+                <span style={{ color: "var(--ink)", whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>
+                  {item.name}
+                </span>
               </span>
-              <span className="ml-3 shrink-0 tabular-nums text-gray-500">{item.count}</span>
+              <span style={{ marginLeft: 12, color: "var(--ink-soft)", fontVariantNumeric: "tabular-nums" }}>
+                {item.count}
+              </span>
             </div>
-            <div className="h-1.5 overflow-hidden rounded-full bg-gray-100">
-              <div
-                className="h-full rounded-full"
-                style={{ width: `${pct}%`, background: TAPS_COLOR }}
-              />
+            <div style={{ height: 6, borderRadius: 999, background: "var(--surface-2)", overflow: "hidden" }}>
+              <div style={{ height: "100%", borderRadius: 999, width: `${pct}%`, background: accent }} />
             </div>
           </li>
         );
@@ -236,30 +247,26 @@ function TopItemsList({ items }: { items: TopItem[] }) {
 }
 
 const DOW_LABELS = ["S", "M", "T", "W", "T", "F", "S"];
-const DOW_ORDER = [1, 2, 3, 4, 5, 6, 0]; // Mon-first
+const DOW_ORDER = [1, 2, 3, 4, 5, 6, 0];
 
 function Heatmap({ cells }: { cells: HeatmapCell[] }) {
   const max = Math.max(1, ...cells.map((c) => c.count));
   const total = cells.reduce((s, c) => s + c.count, 0);
   if (total === 0) {
-    return <div className="py-8 text-center text-sm text-gray-400">No activity in this range.</div>;
+    return <div className="empty">No activity in this range.</div>;
   }
   const get = (dow: number, b: number) =>
     cells.find((c) => c.dayOfWeek === dow && c.bucket === b)?.count ?? 0;
 
   return (
-    <div className="overflow-x-auto">
-      <table className="w-full border-separate border-spacing-[3px]">
+    <div style={{ overflowX: "auto" }}>
+      <table style={{ width: "100%", borderSpacing: 3, borderCollapse: "separate" }}>
         <thead>
           <tr>
-            <th className="w-5"></th>
+            <th style={{ width: 20 }}></th>
             {Array.from({ length: 12 }, (_, b) =>
               b % 2 === 0 ? (
-                <th
-                  key={b}
-                  colSpan={2}
-                  className="text-[10px] font-normal text-gray-400"
-                >
+                <th key={b} colSpan={2} style={{ fontSize: 10, fontWeight: 400, color: "var(--ink-faint)" }}>
                   {String(b * 2).padStart(2, "0")}
                 </th>
               ) : null
@@ -267,25 +274,21 @@ function Heatmap({ cells }: { cells: HeatmapCell[] }) {
           </tr>
         </thead>
         <tbody>
-          {DOW_ORDER.map((dow, rowIdx) => (
+          {DOW_ORDER.map((dow) => (
             <tr key={dow}>
-              <td className="pr-1 text-right text-[10px] font-medium text-gray-400">
+              <td style={{ paddingRight: 4, textAlign: "right", fontSize: 10, fontWeight: 600, color: "var(--ink-faint)" }}>
                 {DOW_LABELS[dow]}
               </td>
               {Array.from({ length: 12 }, (_, b) => {
                 const count = get(dow, b);
                 const intensity = count === 0 ? 0 : 0.15 + 0.85 * (count / max);
-                const bg =
-                  count === 0
-                    ? "#f3f4f6"
-                    : `rgba(232, 165, 43, ${intensity.toFixed(2)})`;
+                const bg = count === 0 ? "var(--surface-2)" : `rgba(61, 90, 39, ${intensity.toFixed(2)})`;
                 const hourStart = String(b * 2).padStart(2, "0");
                 const hourEnd = String(b * 2 + 2).padStart(2, "0");
                 return (
                   <td
                     key={b}
-                    className="h-7 w-full min-w-[18px] rounded"
-                    style={{ background: bg }}
+                    style={{ height: 26, minWidth: 18, borderRadius: 4, background: bg }}
                     title={`${DOW_LABELS[dow]} ${hourStart}:00–${hourEnd}:00 · ${count}`}
                   />
                 );
@@ -294,13 +297,12 @@ function Heatmap({ cells }: { cells: HeatmapCell[] }) {
           ))}
         </tbody>
       </table>
-      <div className="mt-3 flex items-center justify-end gap-1.5 text-[10px] text-gray-400">
+      <div style={{ marginTop: 12, display: "flex", alignItems: "center", justifyContent: "flex-end", gap: 6, fontSize: 10, color: "var(--ink-faint)" }}>
         Less
         {[0.15, 0.4, 0.65, 0.9].map((a) => (
           <span
             key={a}
-            className="inline-block h-2.5 w-2.5 rounded-sm"
-            style={{ background: `rgba(232, 165, 43, ${a})` }}
+            style={{ display: "inline-block", width: 10, height: 10, borderRadius: 3, background: `rgba(61, 90, 39, ${a})` }}
           />
         ))}
         More
@@ -309,17 +311,17 @@ function Heatmap({ cells }: { cells: HeatmapCell[] }) {
   );
 }
 
-function Stars({ rating, size = 12 }: { rating: number; size?: number }) {
+function StarsRow({ rating, size = 13 }: { rating: number; size?: number }) {
   const rounded = Math.round(rating);
   return (
-    <span className="inline-flex items-center gap-0.5">
+    <span className="stars-inline">
       {[1, 2, 3, 4, 5].map((s) => (
         <Star
           key={s}
           size={size}
           strokeWidth={1.5}
-          fill={s <= rounded ? RATING_COLOR : "transparent"}
-          color={s <= rounded ? RATING_COLOR : "#d1d5db"}
+          fill={s <= rounded ? "var(--star)" : "transparent"}
+          color={s <= rounded ? "var(--star)" : "var(--line)"}
         />
       ))}
     </span>
@@ -336,32 +338,33 @@ function RatingDistribution({
   avg: number;
 }) {
   if (total === 0) {
-    return <div className="py-8 text-center text-sm text-gray-400">No reviews in this range.</div>;
+    return <div className="empty">No reviews in this range.</div>;
   }
   const max = Math.max(1, ...buckets.map((b) => b.count));
   return (
     <div>
-      <div className="mb-4 flex items-baseline gap-3">
-        <div className="text-3xl font-semibold tabular-nums text-gray-900">{avg.toFixed(1)}</div>
-        <Stars rating={avg} size={16} />
-        <div className="text-xs text-gray-500">{total} {total === 1 ? "review" : "reviews"}</div>
+      <div style={{ display: "flex", alignItems: "baseline", gap: 12, marginBottom: 16 }}>
+        <div className="stat-value" style={{ fontSize: 30 }}>{avg.toFixed(1)}</div>
+        <StarsRow rating={avg} size={16} />
+        <div style={{ fontSize: 12.5, color: "var(--ink-soft)" }}>
+          {total} {total === 1 ? "review" : "reviews"}
+        </div>
       </div>
-      <div className="space-y-1.5">
+      <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
         {[...buckets].reverse().map((b) => {
           const pct = (b.count / max) * 100;
           return (
-            <div key={b.stars} className="flex items-center gap-2 text-xs">
-              <span className="flex w-6 items-center gap-0.5 tabular-nums text-gray-500">
+            <div key={b.stars} style={{ display: "flex", alignItems: "center", gap: 8, fontSize: 12.5 }}>
+              <span style={{ width: 24, display: "inline-flex", alignItems: "center", gap: 2, color: "var(--ink-soft)", fontVariantNumeric: "tabular-nums" }}>
                 {b.stars}
-                <Star size={10} fill={RATING_COLOR} color={RATING_COLOR} strokeWidth={0} />
+                <Star size={10} fill="var(--star)" color="var(--star)" strokeWidth={0} />
               </span>
-              <div className="h-1.5 flex-1 overflow-hidden rounded-full bg-gray-100">
-                <div
-                  className="h-full rounded-full"
-                  style={{ width: `${pct}%`, background: RATING_COLOR }}
-                />
+              <div style={{ height: 6, flex: 1, borderRadius: 999, background: "var(--surface-2)", overflow: "hidden" }}>
+                <div style={{ height: "100%", width: `${pct}%`, borderRadius: 999, background: "var(--star)" }} />
               </div>
-              <span className="w-6 text-right tabular-nums text-gray-500">{b.count}</span>
+              <span style={{ width: 24, textAlign: "right", color: "var(--ink-soft)", fontVariantNumeric: "tabular-nums" }}>
+                {b.count}
+              </span>
             </div>
           );
         })}
@@ -371,37 +374,42 @@ function RatingDistribution({
 }
 
 function RecentReviewsList({ reviews }: { reviews: RecentReview[] }) {
-  if (reviews.length === 0) {
-    return (
-      <div>
-        <div className="mb-3 text-xs font-medium uppercase tracking-wide text-gray-500">
-          Recent
-        </div>
-        <div className="py-8 text-center text-sm text-gray-400">No recent reviews.</div>
-      </div>
-    );
-  }
   return (
     <div>
-      <div className="mb-3 text-xs font-medium uppercase tracking-wide text-gray-500">
-        Recent
-      </div>
-      <ul className="space-y-3">
-        {reviews.map((r) => (
-          <li key={r.id} className="rounded-lg border border-gray-100 bg-gray-50/50 p-3">
-            <div className="mb-1.5 flex items-center justify-between gap-2">
-              <Stars rating={r.rating} />
-              <span className="text-[11px] text-gray-400">
-                {r.tagLabel ? `${r.tagLabel} · ` : ""}{relativeTime(r.createdAt)}
-              </span>
-            </div>
-            <p className="text-sm text-gray-700 line-clamp-3">{r.body}</p>
-          </li>
-        ))}
-      </ul>
+      <p className="section-label" style={{ margin: "0 0 12px" }}>Recent</p>
+      {reviews.length === 0 ? (
+        <div className="empty">No recent reviews.</div>
+      ) : (
+        <ul style={{ listStyle: "none", padding: 0, margin: 0, display: "flex", flexDirection: "column", gap: 10 }}>
+          {reviews.map((r) => (
+            <li
+              key={r.id}
+              style={{
+                border: "1px solid var(--line)",
+                background: "var(--surface-2)",
+                borderRadius: 10,
+                padding: 12,
+              }}
+            >
+              <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 8, marginBottom: 6 }}>
+                <StarsRow rating={r.rating} />
+                <span style={{ fontSize: 11, color: "var(--ink-faint)" }}>
+                  {r.tagLabel ? `${r.tagLabel} · ` : ""}{relativeTime(r.createdAt)}
+                </span>
+              </div>
+              <p style={{ fontSize: 13.5, color: "var(--ink-soft)", margin: 0 }}>{r.body}</p>
+            </li>
+          ))}
+        </ul>
+      )}
     </div>
   );
 }
+
+const OPENS_COLOR = "#3D5A27";
+const TAPS_COLOR = "#5d7a52";
+const CONVERSION_COLOR = "#7c3aed";
+const RATING_COLOR = "#d4972c";
 
 export default async function AdminAnalyticsPage({
   searchParams,
@@ -425,8 +433,8 @@ export default async function AdminAnalyticsPage({
 
   if (!restaurant) {
     return (
-      <main className="min-h-screen bg-[#faf9f7] p-8">
-        <p className="text-gray-600">No restaurant found for your account.</p>
+      <main className="wrap">
+        <p style={{ color: "var(--ink-soft)" }}>No restaurant found for your account.</p>
       </main>
     );
   }
@@ -437,106 +445,131 @@ export default async function AdminAnalyticsPage({
   );
 
   return (
-    <main className="min-h-screen bg-[#faf9f7]">
-      <div className="mx-auto max-w-6xl px-5 py-8 sm:px-8">
-        <div className="mb-6 flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
-          <div>
-            <Link
-              href="/admin"
-              className="mb-2 inline-flex items-center gap-1 text-xs text-gray-500 hover:text-gray-900"
-            >
-              <ArrowLeft size={12} /> Back to admin
-            </Link>
-            <h1 className="text-2xl font-bold tracking-tight text-gray-900">{restaurant.name}</h1>
-            <p className="mt-0.5 text-sm text-gray-500">
-              Analytics overview · last {range === "7d" ? "7" : range === "30d" ? "30" : "90"} days
-            </p>
-          </div>
-          <RangeTabs current={range} />
+    <main className="wrap">
+      <div className="page-head">
+        <div>
+          <Link href="/admin" className="back-link">← Overview</Link>
+          <h1 className="greeting display">Analytics</h1>
+          <p className="subhead">
+            Last {range === "7d" ? "7" : range === "30d" ? "30" : "90"} days
+          </p>
         </div>
+        <RangeTabs current={range} />
+      </div>
 
-        <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-4">
-          <KpiTile
-            label="Menu opens"
-            value={data.opens}
-            previous={data.prevOpens}
-            formatted={formatInt(data.opens)}
-            sparkline={data.daily.map((d) => d.opens)}
-            color={OPENS_COLOR}
-            icon={<Eye size={13} strokeWidth={2} />}
-            kind="count"
-          />
-          <KpiTile
-            label="Item taps"
-            value={data.taps}
-            previous={data.prevTaps}
-            formatted={formatInt(data.taps)}
-            sparkline={data.daily.map((d) => d.taps)}
-            color={TAPS_COLOR}
-            icon={<MousePointerClick size={13} strokeWidth={2} />}
-            kind="count"
-          />
-          <KpiTile
-            label="Conversion"
-            value={data.conversion}
-            previous={data.prevConversion}
-            formatted={data.opens === 0 ? "—" : formatPercent(data.conversion)}
-            sparkline={conversionSpark}
-            color={CONVERSION_COLOR}
-            icon={<Zap size={13} strokeWidth={2} />}
-            kind="rate"
-            footer="taps per open"
-          />
-          <KpiTile
-            label="Avg rating"
-            value={data.avgRating}
-            previous={data.prevAvgRating}
-            formatted={formatRating(data.avgRating)}
-            sparkline={[]}
-            color={RATING_COLOR}
-            icon={<Star size={13} strokeWidth={2} />}
-            kind="rating"
-            footer={`${data.reviewCount} ${data.reviewCount === 1 ? "review" : "reviews"}`}
-          />
-        </div>
+      <section
+        style={{
+          display: "grid",
+          gridTemplateColumns: "repeat(auto-fit, minmax(220px, 1fr))",
+          gap: 16,
+          marginBottom: 16,
+        }}
+      >
+        <KpiTile
+          label="Menu opens"
+          value={data.opens}
+          previous={data.prevOpens}
+          formatted={formatInt(data.opens)}
+          sparkline={data.daily.map((d) => d.opens)}
+          color={OPENS_COLOR}
+          icon={<Eye size={13} strokeWidth={2} />}
+          kind="count"
+        />
+        <KpiTile
+          label="Item taps"
+          value={data.taps}
+          previous={data.prevTaps}
+          formatted={formatInt(data.taps)}
+          sparkline={data.daily.map((d) => d.taps)}
+          color={TAPS_COLOR}
+          icon={<MousePointerClick size={13} strokeWidth={2} />}
+          kind="count"
+        />
+        <KpiTile
+          label="Conversion"
+          value={data.conversion}
+          previous={data.prevConversion}
+          formatted={data.opens === 0 ? "—" : formatPercent(data.conversion)}
+          sparkline={conversionSpark}
+          color={CONVERSION_COLOR}
+          icon={<Zap size={13} strokeWidth={2} />}
+          kind="rate"
+          footer="taps per open"
+        />
+        <KpiTile
+          label="Avg rating"
+          value={data.avgRating}
+          previous={data.prevAvgRating}
+          formatted={formatRating(data.avgRating)}
+          sparkline={[]}
+          color={RATING_COLOR}
+          icon={<Star size={13} strokeWidth={2} />}
+          kind="rating"
+          footer={`${data.reviewCount} ${data.reviewCount === 1 ? "review" : "reviews"}`}
+        />
+      </section>
 
-        <section className="mt-4 rounded-xl border border-gray-200 bg-white p-5 shadow-sm sm:p-6">
-          <div className="mb-4 flex items-baseline justify-between">
-            <h2 className="text-sm font-semibold text-gray-900">Daily trend</h2>
-            <div className="flex items-center gap-4 text-xs">
-              <LegendDot color={OPENS_COLOR} label="Opens" />
-              <LegendDot color={TAPS_COLOR} label="Taps" />
-            </div>
+      <section className="panel" style={{ marginBottom: 16 }}>
+        <div className="panel-head">
+          <h2 className="panel-title display">Daily trend</h2>
+          <div style={{ display: "flex", alignItems: "center", gap: 16 }}>
+            <LegendDot color={OPENS_COLOR} label="Opens" />
+            <LegendDot color={TAPS_COLOR} label="Taps" />
           </div>
-          <TrendChart data={data.daily} />
+        </div>
+        <TrendChart data={data.daily} />
+      </section>
+
+      <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 16, marginBottom: 16 }} className="analytics-two-col">
+        <section className="panel">
+          <div className="panel-head">
+            <h2 className="panel-title display">Top items</h2>
+          </div>
+          <TopItemsList items={data.topItems} accent={TAPS_COLOR} />
         </section>
-
-        <div className="mt-4 grid grid-cols-1 gap-4 lg:grid-cols-2">
-          <section className="rounded-xl border border-gray-200 bg-white p-5 shadow-sm sm:p-6">
-            <h2 className="mb-4 text-sm font-semibold text-gray-900">Top items</h2>
-            <TopItemsList items={data.topItems} />
-          </section>
-          <section className="rounded-xl border border-gray-200 bg-white p-5 shadow-sm sm:p-6">
-            <h2 className="mb-4 text-sm font-semibold text-gray-900">
-              When people scan
-              <span className="ml-2 text-xs font-normal text-gray-400">UTC</span>
+        <section className="panel">
+          <div className="panel-head">
+            <h2 className="panel-title display">
+              When people scan{" "}
+              <span style={{ fontSize: 11, fontWeight: 400, color: "var(--ink-faint)", marginLeft: 6 }}>
+                UTC
+              </span>
             </h2>
-            <Heatmap cells={data.heatmap} />
-          </section>
-        </div>
-
-        <section className="mt-4 rounded-xl border border-gray-200 bg-white p-5 shadow-sm sm:p-6">
-          <h2 className="mb-4 text-sm font-semibold text-gray-900">Reviews</h2>
-          <div className="grid grid-cols-1 gap-8 md:grid-cols-2">
-            <RatingDistribution
-              buckets={data.ratingDistribution}
-              total={data.reviewCount}
-              avg={data.avgRating}
-            />
-            <RecentReviewsList reviews={data.recentReviews} />
           </div>
+          <Heatmap cells={data.heatmap} />
         </section>
       </div>
+
+      <section className="panel">
+        <div className="panel-head">
+          <h2 className="panel-title display">Reviews</h2>
+        </div>
+        <div
+          style={{
+            display: "grid",
+            gridTemplateColumns: "1fr 1fr",
+            gap: 32,
+          }}
+          className="analytics-two-col"
+        >
+          <RatingDistribution
+            buckets={data.ratingDistribution}
+            total={data.reviewCount}
+            avg={data.avgRating}
+          />
+          <RecentReviewsList reviews={data.recentReviews} />
+        </div>
+      </section>
+
+      <style
+        dangerouslySetInnerHTML={{
+          __html: `
+@media (max-width: 760px) {
+  .analytics-two-col { grid-template-columns: 1fr !important; }
+}
+`,
+        }}
+      />
     </main>
   );
 }
